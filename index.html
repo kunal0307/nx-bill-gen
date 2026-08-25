@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Professional Billing & Invoice Suite</title>
+  <title>Smart Sales & Service Billing Suite</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -125,7 +125,7 @@
     .status-UNPAID { color: #dc2626; border-color: #dc2626; }
     .status-DUE { color: #d97706; border-color: #d97706; }
 
-    /* Party Details (Billed To & Shipped To) */
+    /* Party Details */
     .client-section {
       display: flex;
       gap: 20px;
@@ -266,7 +266,7 @@
       .brand-section, .doc-meta-section, .client-section, .calculation-grid, .footer-grid { flex-direction: row !important; }
       .company-meta { width: 400px !important; }
       .logo-box { border: none; width: 140px; }
-      #sameAsBillingLabel { display: none !important; } /* Hide checkbox text in print */
+      #sameAsBillingLabel { display: none !important; }
     }
   </style>
 </head>
@@ -326,7 +326,7 @@
           <label>Category :</label>
           <select id="billCategory" onchange="handleCategoryChange()" style="font-weight: bold; background: #e0f2fe; border-color: #38bdf8;">
             <option value="SALES" selected>📦 Sales (Goods / Products)</option>
-            <option value="SERVICE">🛠️ Service (Consulting / Works)</option>
+            <option value="SERVICE">🛠️ Service / Consulting</option>
           </select>
         </div>
         <div class="info-row">
@@ -367,9 +367,9 @@
       </div>
     </div>
 
-    <!-- Party Details Section (Billed To & Shipped To) -->
+    <!-- Party Details Section -->
     <div class="client-section">
-      <!-- Billed To (Buyer) -->
+      <!-- Billed To (Buyer / Client) -->
       <div class="client-col">
         <h4 id="partyHeading">Billed To (Buyer)</h4>
         
@@ -383,7 +383,7 @@
           <input type="text" id="partyMobile" placeholder="Contact Number">
         </div>
         
-        <!-- GST & Supply Type Together -->
+        <!-- GST, State & Supply Type Together -->
         <div class="info-row">
           <label id="lblPartyGst">GSTIN :</label>
           <input type="text" id="partyGst" placeholder="GST Number (Optional)" oninput="autoDetectStateFromGST()">
@@ -401,27 +401,34 @@
         </div>
 
         <div class="info-row" style="align-items: flex-start; margin-top: 6px;">
-          <label>Billing Addr :</label>
+          <label id="lblPartyAddress">Billing Addr :</label>
           <textarea id="partyAddress" rows="2" placeholder="Full Billing Address with PIN" oninput="syncAddresses()"></textarea>
         </div>
       </div>
 
-      <!-- Shipped To (Delivery) -->
+      <!-- Shipped To OR Service Details (Dynamic) -->
       <div class="client-col">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
-          <h4 id="shipHeading">Shipped To (Delivery)</h4>
+          <h4 id="secondPartyHeading">Shipped To (Delivery)</h4>
           <label id="sameAsBillingLabel" style="font-size: 10px; cursor: pointer; color: #2563eb; font-weight: bold;">
             <input type="checkbox" id="sameAsBilling" onchange="syncAddresses()"> Same as Billed To
           </label>
         </div>
         
         <div class="info-row">
-          <label>Ship Name :</label>
-          <input type="text" id="shipName" placeholder="Delivery / Consignee Name">
+          <label id="lblSecondName">Ship Name :</label>
+          <input type="text" id="secondName" placeholder="Delivery / Consignee Name">
         </div>
+
+        <!-- Shipped / Service GSTIN Field -->
+        <div class="info-row">
+          <label id="lblSecondGst">Ship GSTIN :</label>
+          <input type="text" id="secondGst" placeholder="Shipment / Site GSTIN (Optional)">
+        </div>
+
         <div class="info-row" style="align-items: flex-start;">
-          <label>Ship Addr :</label>
-          <textarea id="shipAddress" rows="4" placeholder="Full Delivery Address with State & PIN"></textarea>
+          <label id="lblSecondAddress">Ship Addr :</label>
+          <textarea id="secondAddress" rows="4" placeholder="Full Delivery Address with State & PIN"></textarea>
         </div>
       </div>
     </div>
@@ -535,6 +542,7 @@
           <thead>
             <tr>
               <th>Doc No</th>
+              <th>Category</th>
               <th>Type</th>
               <th>Party</th>
               <th>Date</th>
@@ -552,7 +560,6 @@
     let currentGrandTotal = 0;
     let qrInstance = null;
 
-    // GST State Code Directory
     const gstStateCodes = {
       "01": "Jammu & Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh",
       "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan",
@@ -565,22 +572,24 @@
     due.setDate(due.getDate() + 7);
     document.getElementById('dueDate').valueAsDate = due;
 
-    /* ====== Sync Billing & Shipping Address ====== */
+    /* ====== Sync Billed To & Second Address ====== */
     function syncAddresses() {
       if (document.getElementById('sameAsBilling').checked) {
-        document.getElementById('shipName').value = document.getElementById('partyName').value;
-        document.getElementById('shipAddress').value = document.getElementById('partyAddress').value;
+        document.getElementById('secondName').value = document.getElementById('partyName').value;
+        document.getElementById('secondGst').value = document.getElementById('partyGst').value;
+        document.getElementById('secondAddress').value = document.getElementById('partyAddress').value;
       }
     }
 
-    // Attach event to partyName so ShipName updates automatically if checkbox is checked
     document.getElementById('partyName').addEventListener('input', syncAddresses);
+    document.getElementById('partyGst').addEventListener('input', syncAddresses);
 
-    /* ====== Category Switch (Sales vs Service) ====== */
+    /* ====== Dynamic Category Switch (Sales vs Service) ====== */
     function handleCategoryChange() {
       const category = document.getElementById('billCategory').value;
       const isService = category === 'SERVICE';
 
+      // Table Header Switch
       document.getElementById('thDesc').innerText = isService ? 'Service Description' : 'Item / Product Name';
       document.getElementById('thCode').innerText = isService ? 'SAC Code' : 'HSN Code';
       document.getElementById('thRate').innerText = isService ? 'Service Fee (₹)' : 'Rate (₹)';
@@ -588,15 +597,39 @@
       document.querySelectorAll('.col-qty').forEach(el => el.style.display = isService ? 'none' : '');
       document.querySelectorAll('.col-unit').forEach(el => el.style.display = isService ? 'none' : '');
 
+      // Right-side Block Switch (Shipped To vs Service Details)
+      const secondPartyHeading = document.getElementById('secondPartyHeading');
+      const lblSecondName = document.getElementById('lblSecondName');
+      const lblSecondGst = document.getElementById('lblSecondGst');
+      const lblSecondAddress = document.getElementById('lblSecondAddress');
+
+      if (isService) {
+        secondPartyHeading.innerText = 'Service / Site Details';
+        lblSecondName.innerText = 'Site/Proj :';
+        lblSecondGst.innerText = 'Site GSTIN :';
+        lblSecondAddress.innerText = 'Site Addr :';
+        document.getElementById('secondName').placeholder = 'Client Site / Project Name';
+        document.getElementById('secondGst').placeholder = 'Site / Branch GSTIN (Optional)';
+        document.getElementById('secondAddress').placeholder = 'Service Location / Site Address';
+      } else {
+        secondPartyHeading.innerText = 'Shipped To (Delivery)';
+        lblSecondName.innerText = 'Ship Name :';
+        lblSecondGst.innerText = 'Ship GSTIN :';
+        lblSecondAddress.innerText = 'Ship Addr :';
+        document.getElementById('secondName').placeholder = 'Delivery / Consignee Name';
+        document.getElementById('secondGst').placeholder = 'Shipment GSTIN (Optional)';
+        document.getElementById('secondAddress').placeholder = 'Full Delivery Address with State & PIN';
+      }
+
       calculate();
     }
 
     /* ====== Dynamic Role & DocType Handler ====== */
     function handleDocTypeChange() {
       const docType = document.getElementById('docType').value;
+      const category = document.getElementById('billCategory').value;
       const title = document.getElementById('docTitle');
       const partyHeading = document.getElementById('partyHeading');
-      const shipHeading = document.getElementById('shipHeading');
       const lblPartyName = document.getElementById('lblPartyName');
       const lblPartyGst = document.getElementById('lblPartyGst');
       const lblDocNo = document.getElementById('lblDocNo');
@@ -610,8 +643,7 @@
 
       if (docType === 'INV') {
         title.innerText = 'TAX INVOICE';
-        partyHeading.innerText = 'Billed To (Buyer)';
-        shipHeading.innerText = 'Shipped To (Delivery)';
+        partyHeading.innerText = category === 'SERVICE' ? 'Billed To (Client)' : 'Billed To (Buyer)';
         lblPartyName.innerText = 'Name :';
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'Invoice No :';
@@ -623,7 +655,6 @@
       } else if (docType === 'QT') {
         title.innerText = 'QUOTATION / ESTIMATE';
         partyHeading.innerText = 'Quoted To (Client)';
-        shipHeading.innerText = 'Project / Delivery Addr';
         lblPartyName.innerText = 'Name :';
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'Quote Ref :';
@@ -635,7 +666,6 @@
       } else if (docType === 'PO') {
         title.innerText = 'PURCHASE ORDER';
         partyHeading.innerText = 'Vendor (Supplier)';
-        shipHeading.innerText = 'Deliver To (Our Site)';
         lblPartyName.innerText = 'Name :';
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'PO Number :';
@@ -887,8 +917,9 @@
         partyStateCode: document.getElementById('partyStateCode').value,
         placeOfSupply: document.getElementById('placeOfSupply').value,
         partyAddress: document.getElementById('partyAddress').value,
-        shipName: document.getElementById('shipName').value,
-        shipAddress: document.getElementById('shipAddress').value,
+        secondName: document.getElementById('secondName').value,
+        secondGst: document.getElementById('secondGst').value,
+        secondAddress: document.getElementById('secondAddress').value,
         total: currentGrandTotal,
         items: items
       };
@@ -899,7 +930,6 @@
       
       localStorage.setItem('billing_enterprise_db', JSON.stringify(db));
       
-      // Save to client directory
       if (inv.partyName) {
         let clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
         clients[inv.partyName] = { 
@@ -907,8 +937,9 @@
           gst: inv.partyGst, 
           addr: inv.partyAddress, 
           stateCode: inv.partyStateCode,
-          shipName: inv.shipName,
-          shipAddr: inv.shipAddress
+          secondName: inv.secondName,
+          secondGst: inv.secondGst,
+          secondAddr: inv.secondAddress
         };
         localStorage.setItem('clients_dir', JSON.stringify(clients));
         populateClientsDropdown();
@@ -936,8 +967,9 @@
         document.getElementById('partyGst').value = clients[name].gst || '';
         document.getElementById('partyAddress').value = clients[name].addr || '';
         document.getElementById('partyStateCode').value = clients[name].stateCode || '';
-        document.getElementById('shipName').value = clients[name].shipName || '';
-        document.getElementById('shipAddress').value = clients[name].shipAddr || '';
+        document.getElementById('secondName').value = clients[name].secondName || '';
+        document.getElementById('secondGst').value = clients[name].secondGst || '';
+        document.getElementById('secondAddress').value = clients[name].secondAddr || '';
         autoDetectStateFromGST();
       }
     }
@@ -955,6 +987,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${x.id}</strong></td>
+          <td><span style="font-size:10px; background:#e0f2fe; padding:2px 4px; border-radius:3px;">${x.category || 'SALES'}</span></td>
           <td>${x.docType}</td>
           <td>${x.partyName || '-'}</td>
           <td>${x.docDate}</td>
@@ -992,8 +1025,9 @@
       document.getElementById('placeOfSupply').value = inv.placeOfSupply || 'SAME';
       document.getElementById('partyAddress').value = inv.partyAddress || '';
       
-      document.getElementById('shipName').value = inv.shipName || '';
-      document.getElementById('shipAddress').value = inv.shipAddress || '';
+      document.getElementById('secondName').value = inv.secondName || '';
+      document.getElementById('secondGst').value = inv.secondGst || '';
+      document.getElementById('secondAddress').value = inv.secondAddress || '';
 
       const tb = document.getElementById('billBody');
       tb.innerHTML = '';
@@ -1009,8 +1043,9 @@
         document.getElementById('partyGst').value = '';
         document.getElementById('partyStateCode').value = '';
         document.getElementById('partyAddress').value = '';
-        document.getElementById('shipName').value = '';
-        document.getElementById('shipAddress').value = '';
+        document.getElementById('secondName').value = '';
+        document.getElementById('secondGst').value = '';
+        document.getElementById('secondAddress').value = '';
         document.getElementById('sameAsBilling').checked = false;
         addRow();
         handleDocTypeChange();
