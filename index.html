@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Billing & Invoice Suite</title>
+  <title>Professional Billing & Invoice Suite</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -11,7 +11,7 @@
     body { background-color: #f1f5f9; padding: 10px; color: #1e293b; }
     
     .invoice-card {
-      max-width: 900px;
+      max-width: 950px;
       width: 100%;
       margin: 0 auto;
       background: #ffffff;
@@ -76,7 +76,7 @@
       background: #fafafa;
     }
     .logo-box img { max-width: 100%; max-height: 65px; object-fit: contain; }
-    .company-meta { width: 380px; }
+    .company-meta { width: 400px; }
     
     /* Key-Value Form Rows */
     .info-row {
@@ -125,10 +125,10 @@
     .status-UNPAID { color: #dc2626; border-color: #dc2626; }
     .status-DUE { color: #d97706; border-color: #d97706; }
 
-    /* Client/Party Details Section */
+    /* Party Details (Billed To & Shipped To) */
     .client-section {
       display: flex;
-      gap: 15px;
+      gap: 20px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       padding: 12px;
@@ -136,8 +136,16 @@
       margin-bottom: 15px;
     }
     .client-col { flex: 1; min-width: 0; }
+    .client-col h4 {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #0f172a;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 4px;
+    }
 
-    /* Responsive Table Wrapper */
+    /* Responsive Table */
     .table-wrapper {
       width: 100%;
       overflow-x: auto;
@@ -228,7 +236,7 @@
       overflow-y: auto;
     }
 
-    /* Mobile Responsive Breakpoints */
+    /* Mobile Responsive */
     @media (max-width: 768px) {
       body { padding: 4px; }
       .invoice-card { padding: 12px; }
@@ -256,8 +264,9 @@
       .table-wrapper { overflow: visible !important; }
       table { min-width: 100% !important; }
       .brand-section, .doc-meta-section, .client-section, .calculation-grid, .footer-grid { flex-direction: row !important; }
-      .company-meta { width: 380px !important; }
+      .company-meta { width: 400px !important; }
       .logo-box { border: none; width: 140px; }
+      #sameAsBillingLabel { display: none !important; } /* Hide checkbox text in print */
     }
   </style>
 </head>
@@ -341,8 +350,8 @@
         </div>
       </div>
 
-      <div style="width: 320px;">
-        <h2 id="docTitle" style="color:#2563eb; font-size:18px; margin-bottom:6px; text-align:right;">TAX INVOICE</h2>
+      <div style="width: 340px;">
+        <h2 id="docTitle" style="color:#2563eb; font-size:19px; margin-bottom:6px; text-align:right;">TAX INVOICE</h2>
         <div class="info-row">
           <label id="lblDocNo">Invoice No :</label>
           <input type="text" id="invoiceNumber">
@@ -358,9 +367,12 @@
       </div>
     </div>
 
-    <!-- Party Details Section -->
+    <!-- Party Details Section (Billed To & Shipped To) -->
     <div class="client-section">
+      <!-- Billed To (Buyer) -->
       <div class="client-col">
+        <h4 id="partyHeading">Billed To (Buyer)</h4>
+        
         <div class="info-row">
           <label id="lblPartyName">Name :</label>
           <input type="text" id="partyName" placeholder="Client / Party Name" list="clientList" onchange="autoFillClient(this.value)">
@@ -368,18 +380,13 @@
         </div>
         <div class="info-row">
           <label>Mobile No :</label>
-          <input type="text" id="partyMobile" placeholder="Contact / WhatsApp Number">
+          <input type="text" id="partyMobile" placeholder="Contact Number">
         </div>
+        
+        <!-- GST & Supply Type Together -->
         <div class="info-row">
           <label id="lblPartyGst">GSTIN :</label>
           <input type="text" id="partyGst" placeholder="GST Number (Optional)" oninput="autoDetectStateFromGST()">
-        </div>
-      </div>
-
-      <div class="client-col">
-        <div class="info-row">
-          <label>Address :</label>
-          <textarea id="partyAddress" rows="2" placeholder="Full Address with PIN"></textarea>
         </div>
         <div class="info-row">
           <label>State Code :</label>
@@ -388,9 +395,33 @@
         <div class="info-row">
           <label>Supply Type :</label>
           <select id="placeOfSupply" onchange="calculate()">
-            <option value="SAME" selected>Intra-State (Same State: CGST + SGST)</option>
-            <option value="OTHER">Inter-State (Outside State: IGST)</option>
+            <option value="SAME" selected>Intra-State (CGST + SGST)</option>
+            <option value="OTHER">Inter-State (IGST)</option>
           </select>
+        </div>
+
+        <div class="info-row" style="align-items: flex-start; margin-top: 6px;">
+          <label>Billing Addr :</label>
+          <textarea id="partyAddress" rows="2" placeholder="Full Billing Address with PIN" oninput="syncAddresses()"></textarea>
+        </div>
+      </div>
+
+      <!-- Shipped To (Delivery) -->
+      <div class="client-col">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <h4 id="shipHeading">Shipped To (Delivery)</h4>
+          <label id="sameAsBillingLabel" style="font-size: 10px; cursor: pointer; color: #2563eb; font-weight: bold;">
+            <input type="checkbox" id="sameAsBilling" onchange="syncAddresses()"> Same as Billed To
+          </label>
+        </div>
+        
+        <div class="info-row">
+          <label>Ship Name :</label>
+          <input type="text" id="shipName" placeholder="Delivery / Consignee Name">
+        </div>
+        <div class="info-row" style="align-items: flex-start;">
+          <label>Ship Addr :</label>
+          <textarea id="shipAddress" rows="4" placeholder="Full Delivery Address with State & PIN"></textarea>
         </div>
       </div>
     </div>
@@ -504,7 +535,6 @@
           <thead>
             <tr>
               <th>Doc No</th>
-              <th>Category</th>
               <th>Type</th>
               <th>Party</th>
               <th>Date</th>
@@ -535,6 +565,17 @@
     due.setDate(due.getDate() + 7);
     document.getElementById('dueDate').valueAsDate = due;
 
+    /* ====== Sync Billing & Shipping Address ====== */
+    function syncAddresses() {
+      if (document.getElementById('sameAsBilling').checked) {
+        document.getElementById('shipName').value = document.getElementById('partyName').value;
+        document.getElementById('shipAddress').value = document.getElementById('partyAddress').value;
+      }
+    }
+
+    // Attach event to partyName so ShipName updates automatically if checkbox is checked
+    document.getElementById('partyName').addEventListener('input', syncAddresses);
+
     /* ====== Category Switch (Sales vs Service) ====== */
     function handleCategoryChange() {
       const category = document.getElementById('billCategory').value;
@@ -554,6 +595,8 @@
     function handleDocTypeChange() {
       const docType = document.getElementById('docType').value;
       const title = document.getElementById('docTitle');
+      const partyHeading = document.getElementById('partyHeading');
+      const shipHeading = document.getElementById('shipHeading');
       const lblPartyName = document.getElementById('lblPartyName');
       const lblPartyGst = document.getElementById('lblPartyGst');
       const lblDocNo = document.getElementById('lblDocNo');
@@ -567,6 +610,8 @@
 
       if (docType === 'INV') {
         title.innerText = 'TAX INVOICE';
+        partyHeading.innerText = 'Billed To (Buyer)';
+        shipHeading.innerText = 'Shipped To (Delivery)';
         lblPartyName.innerText = 'Name :';
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'Invoice No :';
@@ -577,9 +622,11 @@
         document.getElementById('invoiceNumber').value = `INV-${year}-${String(cnt).padStart(3, '0')}`;
       } else if (docType === 'QT') {
         title.innerText = 'QUOTATION / ESTIMATE';
+        partyHeading.innerText = 'Quoted To (Client)';
+        shipHeading.innerText = 'Project / Delivery Addr';
         lblPartyName.innerText = 'Name :';
         lblPartyGst.innerText = 'GSTIN :';
-        lblDocNo.innerText = 'Quote Ref No :';
+        lblDocNo.innerText = 'Quote Ref :';
         lblDocDate.innerText = 'Quote Date :';
         lblSecondDate.innerText = 'Valid Till :';
         statusFieldRow.style.display = 'none';
@@ -587,6 +634,8 @@
         document.getElementById('invoiceNumber').value = `QT-${year}-${String(cnt).padStart(3, '0')}`;
       } else if (docType === 'PO') {
         title.innerText = 'PURCHASE ORDER';
+        partyHeading.innerText = 'Vendor (Supplier)';
+        shipHeading.innerText = 'Deliver To (Our Site)';
         lblPartyName.innerText = 'Name :';
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'PO Number :';
@@ -835,9 +884,11 @@
         partyName: document.getElementById('partyName').value,
         partyMobile: document.getElementById('partyMobile').value,
         partyGst: document.getElementById('partyGst').value,
-        partyAddress: document.getElementById('partyAddress').value,
         partyStateCode: document.getElementById('partyStateCode').value,
         placeOfSupply: document.getElementById('placeOfSupply').value,
+        partyAddress: document.getElementById('partyAddress').value,
+        shipName: document.getElementById('shipName').value,
+        shipAddress: document.getElementById('shipAddress').value,
         total: currentGrandTotal,
         items: items
       };
@@ -847,17 +898,24 @@
       if (idx >= 0) db[idx] = inv; else db.unshift(inv);
       
       localStorage.setItem('billing_enterprise_db', JSON.stringify(db));
-      saveClientDirectory(inv.partyName, inv.partyMobile, inv.partyGst, inv.partyAddress, inv.partyStateCode);
+      
+      // Save to client directory
+      if (inv.partyName) {
+        let clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
+        clients[inv.partyName] = { 
+          mobile: inv.partyMobile, 
+          gst: inv.partyGst, 
+          addr: inv.partyAddress, 
+          stateCode: inv.partyStateCode,
+          shipName: inv.shipName,
+          shipAddr: inv.shipAddress
+        };
+        localStorage.setItem('clients_dir', JSON.stringify(clients));
+        populateClientsDropdown();
+      }
+      
       updateHistoryCount();
       alert(`Document ${inv.id} saved successfully!`);
-    }
-
-    function saveClientDirectory(name, mobile, gst, addr, stateCode) {
-      if (!name) return;
-      let clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
-      clients[name] = { mobile, gst, addr, stateCode };
-      localStorage.setItem('clients_dir', JSON.stringify(clients));
-      populateClientsDropdown();
     }
 
     function populateClientsDropdown() {
@@ -878,6 +936,8 @@
         document.getElementById('partyGst').value = clients[name].gst || '';
         document.getElementById('partyAddress').value = clients[name].addr || '';
         document.getElementById('partyStateCode').value = clients[name].stateCode || '';
+        document.getElementById('shipName').value = clients[name].shipName || '';
+        document.getElementById('shipAddress').value = clients[name].shipAddr || '';
         autoDetectStateFromGST();
       }
     }
@@ -895,7 +955,6 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${x.id}</strong></td>
-          <td><span style="font-size:10px; background:#e0f2fe; padding:2px 4px; border-radius:3px;">${x.category || 'SALES'}</span></td>
           <td>${x.docType}</td>
           <td>${x.partyName || '-'}</td>
           <td>${x.docDate}</td>
@@ -925,12 +984,16 @@
       updateStatusStamp();
       document.getElementById('docDate').value = inv.docDate;
       document.getElementById('dueDate').value = inv.dueDate;
-      document.getElementById('partyName').value = inv.partyName;
-      document.getElementById('partyMobile').value = inv.partyMobile;
-      document.getElementById('partyGst').value = inv.partyGst;
-      document.getElementById('partyAddress').value = inv.partyAddress;
+      
+      document.getElementById('partyName').value = inv.partyName || '';
+      document.getElementById('partyMobile').value = inv.partyMobile || '';
+      document.getElementById('partyGst').value = inv.partyGst || '';
       document.getElementById('partyStateCode').value = inv.partyStateCode || '';
       document.getElementById('placeOfSupply').value = inv.placeOfSupply || 'SAME';
+      document.getElementById('partyAddress').value = inv.partyAddress || '';
+      
+      document.getElementById('shipName').value = inv.shipName || '';
+      document.getElementById('shipAddress').value = inv.shipAddress || '';
 
       const tb = document.getElementById('billBody');
       tb.innerHTML = '';
@@ -944,8 +1007,11 @@
         document.getElementById('partyName').value = '';
         document.getElementById('partyMobile').value = '';
         document.getElementById('partyGst').value = '';
-        document.getElementById('partyAddress').value = '';
         document.getElementById('partyStateCode').value = '';
+        document.getElementById('partyAddress').value = '';
+        document.getElementById('shipName').value = '';
+        document.getElementById('shipAddress').value = '';
+        document.getElementById('sameAsBilling').checked = false;
         addRow();
         handleDocTypeChange();
       }
