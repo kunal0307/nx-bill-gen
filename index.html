@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Pro Billing & Quotation Suite</title>
+  <!-- CDN for Dynamic Offline QR Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f1f5f9; padding: 20px; color: #1e293b; }
+    
+    .invoice-card {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 35px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    /* Top Toolbar (Non-printable) */
+    .action-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: 0.2s;
+    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-whatsapp { background: #25d366; color: white; }
+    .btn-dark { background: #475569; color: white; }
+    .btn-amber { background: #d97706; color: white; }
+    .btn:hover { opacity: 0.9; }
+
+    /* Header & Branding */
+    .brand-section {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    .logo-box {
+      width: 140px;
+      min-height: 70px;
+      border: 1px dashed #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #64748b;
+      cursor: pointer;
+      position: relative;
+    }
+    .logo-box img { max-width: 100%; max-height: 70px; object-fit: contain; }
+    .company-meta { text-align: right; width: 320px; }
+    .company-meta input {
+      width: 100%;
+      text-align: right;
+      border: none;
+      outline: none;
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 2px;
+    }
+    .company-meta input.comp-title { font-size: 20px; font-weight: bold; color: #0f172a; }
+
+    /* Meta & Status Bar */
+    .doc-meta-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .doc-meta-left select, .doc-meta-left input {
+      padding: 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .status-badge-container { display: flex; gap: 8px; margin-top: 8px; }
+    .status-stamp {
+      font-weight: 800;
+      font-size: 14px;
+      padding: 4px 12px;
+      border: 2px solid;
+      border-radius: 4px;
+      display: inline-block;
+      text-transform: uppercase;
+    }
+    .status-PAID { color: #16a34a; border-color: #16a34a; }
+    .status-UNPAID { color: #dc2626; border-color: #dc2626; }
+    .status-DUE { color: #d97706; border-color: #d97706; }
+
+    .doc-meta-right { text-align: right; }
+    .doc-meta-right h1 { color: #2563eb; font-size: 22px; margin-bottom: 6px; }
+    .meta-field { font-size: 13px; margin-bottom: 4px; }
+    .meta-field input { padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width: 140px; }
+
+    /* Client Details */
+    .client-section {
+      display: flex;
+      gap: 15px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .client-col { flex: 1; }
+    .client-col h4 { font-size: 13px; text-transform: uppercase; color: #475569; margin-bottom: 6px; }
+    .client-col input, .client-col textarea {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 5px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    /* Items Table */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    table th, table td { border: 1px solid #e2e8f0; padding: 6px 8px; font-size: 12px; }
+    table th { background: #f1f5f9; font-weight: 600; text-align: left; }
+    table input { width: 100%; border: none; outline: none; background: transparent; font-size: 12px; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .btn-del { color: #dc2626; border: none; background: transparent; cursor: pointer; font-weight: bold; }
+
+    /* Summary & Calculations */
+    .calculation-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .words-box {
+      width: 55%;
+      font-size: 12px;
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #2563eb;
+    }
+    .words-box strong { color: #0f172a; }
+    .totals-table { width: 40%; }
+    .totals-table td { border: none; padding: 3px 0; font-size: 13px; }
+    .grand-total-row { border-top: 1px solid #94a3b8; font-weight: bold; font-size: 15px; color: #2563eb; }
+
+    /* Footer: Bank, QR & Signatures */
+    .footer-grid {
+      display: flex;
+      gap: 15px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 15px;
+      margin-top: 10px;
+    }
+    .footer-box { flex: 1.2; font-size: 11px; }
+    .footer-box h5 { font-size: 12px; text-transform: uppercase; margin-bottom: 6px; color: #334155; }
+    .footer-box input, .footer-box textarea {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      padding: 4px;
+      margin-bottom: 4px;
+      font-size: 11px;
+      border-radius: 4px;
+    }
+    .qr-card {
+      flex: 0.8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1px dashed #cbd5e1;
+      padding: 8px;
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+    .qr-card span { font-size: 10px; font-weight: 600; margin-top: 4px; color: #475569; }
+    .sign-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      text-align: center;
+      border: 1px dashed #cbd5e1;
+      border-radius: 6px;
+      padding: 8px;
+    }
+    .sign-preview { max-height: 50px; max-width: 120px; display: none; margin-bottom: 5px; }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 750px;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    /* Print Clean Rules */
+    @media print {
+      body { background: white; padding: 0; }
+      .invoice-card { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .action-toolbar, .btn-add, .btn-del, .action-col, input[type="file"], .modal { display: none !important; }
+      input, textarea, select { border: none !important; padding: 0 !important; resize: none; appearance: none; }
+      .logo-box { border: none; }
+      .sign-box, .qr-card { border: 1px solid #e2e8f0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="invoice-card">
+    
+    <!-- Action Top Bar -->
+    <div class="action-toolbar">
+      <div class="btn-group">
+        <button class="btn btn-dark" onclick="resetForm()">+ New</button>
+        <button class="btn btn-primary" onclick="saveCurrentInvoice()">💾 Save</button>
+        <button class="btn btn-amber" onclick="openHistoryModal()">📂 History (<span id="historyCount">0</span>)</button>
+        <button class="btn btn-success" onclick="exportToCSV()">📊 Export CSV</button>
+        <button class="btn btn-dark" onclick="backupJSON()">📦 Backup</button>
+        <button class="btn btn-whatsapp" onclick="shareWhatsApp()">📱 WhatsApp</button>
+      </div>
+      <button class="btn btn-primary" onclick="printInvoice()">🖨️ Print / PDF</button>
+    </div>
+
+    <!-- Header Section -->
+    <div class="brand-section">
+      <div>
+        <div class="logo-box" onclick="document.getElementById('logoInput').click()">
+          <span id="logoPlaceholder">Click to upload Logo</span>
+          <img id="logoImg">
+        </div>
+        <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewImage(event, 'logoImg', 'logoPlaceholder')">
+      </div>
+      <div class="company-meta">
+        <input type="text" id="compName" class="comp-title" placeholder="Your Business Name" oninput="calculate()">
+        <input type="text" placeholder="Branch Address, City, State - PIN">
+        <input type="text" placeholder="Phone: +91 9876543210">
+        <input type="text" placeholder="Email: contact@business.com">
+        <input type="text" placeholder="GSTIN: 07AAAAA0000A1Z5">
+      </div>
+    </div>
+
+    <!-- Document Meta & Status -->
+    <div class="doc-meta-section">
+      <div class="doc-meta-left">
+        <div>
+          <label><strong>Type: </strong></label>
+          <select id="docType" onchange="handleDocTypeChange()">
+            <option value="INV" data-title="TAX INVOICE" selected>Tax Invoice</option>
+            <option value="QT" data-title="QUOTATION">Quotation</option>
+            <option value="PO" data-title="PURCHASE ORDER">Purchase Order</option>
+          </select>
+        </div>
+        <div class="status-badge-container">
+          <select id="paymentStatus" onchange="updateStatusStamp()">
+            <option value="PAID">PAID</option>
+            <option value="UNPAID" selected>UNPAID</option>
+            <option value="DUE">DUE</option>
+          </select>
+          <span id="statusStamp" class="status-stamp status-UNPAID">UNPAID</span>
+        </div>
+      </div>
+      <div class="doc-meta-right">
+        <h1 id="docTitle">TAX INVOICE</h1>
+        <div class="meta-field"><strong>Doc No: </strong><input type="text" id="invoiceNumber"></div>
+        <div class="meta-field"><strong>Date: </strong><input type="date" id="docDate"></div>
+        <div class="meta-field"><strong>Due Date: </strong><input type="date" id="dueDate"></div>
+      </div>
+    </div>
+
+    <!-- Buyer Details -->
+    <div class="client-section">
+      <div class="client-col">
+        <h4>Buyer Details</h4>
+        <input type="text" id="partyName" placeholder="Client / Company Name" list="clientList" onchange="autoFillClient(this.value)">
+        <datalist id="clientList"></datalist>
+        <input type="text" id="partyMobile" placeholder="Contact / WhatsApp Mobile">
+        <input type="text" id="partyGst" placeholder="Client GSTIN">
+      </div>
+      <div class="client-col">
+        <h4>Billing / Shipping Address</h4>
+        <textarea id="partyAddress" rows="3" placeholder="Full Address with Pincode & State"></textarea>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <table id="billTable">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Item Description</th>
+          <th style="width: 12%;">HSN/SAC</th>
+          <th style="width: 8%;" class="text-center">Qty</th>
+          <th style="width: 12%;" class="text-right">Rate (₹)</th>
+          <th style="width: 10%;" class="text-center">Disc (%)</th>
+          <th style="width: 14%;" class="text-right">Taxable (₹)</th>
+          <th style="width: 5%;" class="text-center action-col"></th>
+        </tr>
+      </thead>
+      <tbody id="billBody">
+        <!-- Dynamic Rows -->
+      </tbody>
+    </table>
+    <button class="btn btn-primary btn-add" onclick="addRow()">+ Add Item</button>
+
+    <!-- Calculation & Words Grid -->
+    <div class="calculation-grid">
+      <div class="words-box">
+        <strong>Amount in Words:</strong><br>
+        <span id="amountWords">Zero Rupees Only</span>
+      </div>
+
+      <table class="totals-table">
+        <tr>
+          <td>Taxable Subtotal:</td>
+          <td class="text-right" id="subTotal">₹0.00</td>
+        </tr>
+        <tr>
+          <td>Tax Regime:</td>
+          <td class="text-right">
+            <select id="taxType" onchange="calculate()" style="font-size:11px;">
+              <option value="INTRA" selected>Intra-State (CGST + SGST)</option>
+              <option value="INTER">Inter-State (IGST)</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>GST Rate (%):</td>
+          <td class="text-right"><input type="number" id="gstPercent" value="18" min="0" style="width:50px; text-align:right;" oninput="calculate()"></td>
+        </tr>
+        <tr id="cgstRow">
+          <td>CGST (<span id="cgstRateLabel">9%</span>):</td>
+          <td class="text-right" id="cgstAmount">₹0.00</td>
+        </tr>
+        <tr id="sgstRow">
+          <td>SGST (<span id="sgstRateLabel">9%</span>):</td>
+          <td class="text-right" id="sgstAmount">₹0.00</td>
+        </tr>
+        <tr id="igstRow" style="display:none;">
+          <td>IGST (<span id="igstRateLabel">18%</span>):</td>
+          <td class="text-right" id="igstAmount">₹0.00</td>
+        </tr>
+        <tr>
+          <td>Round Off:</td>
+          <td class="text-right" id="roundOffVal">₹0.00</td>
+        </tr>
+        <tr class="grand-total-row">
+          <td>Grand Total:</td>
+          <td class="text-right" id="grandTotal">₹0.00</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Footer: Bank, QR, Terms & Signature -->
+    <div class="footer-grid">
+      <div class="footer-box">
+        <h5>Bank & UPI Details</h5>
+        <input type="text" placeholder="Bank: HDFC Bank / State Bank of India">
+        <input type="text" placeholder="A/C No: 50200012345678">
+        <input type="text" placeholder="IFSC Code: HDFC0001234">
+        <input type="text" id="upiId" placeholder="UPI ID (e.g. name@okhdfcbank)" value="merchant@upi" oninput="updateQRCode()">
+      </div>
+
+      <div class="qr-card">
+        <h5>Scan & Pay</h5>
+        <div id="qrcode"></div>
+        <span>Scan via any UPI App</span>
+      </div>
+
+      <div class="footer-box">
+        <h5>Terms & Conditions</h5>
+        <textarea rows="4" placeholder="1. Payment within due date.&#10;2. Goods once sold will not be returned.&#10;3. Subject to local jurisdiction."></textarea>
+      </div>
+
+      <div class="sign-box" onclick="document.getElementById('signInput').click()">
+        <img id="signImg" class="sign-preview">
+        <span id="signPlaceholder" style="font-size: 10px; color:#64748b; cursor:pointer;">Upload Sign/Seal</span>
+        <input type="file" id="signInput" accept="image/*" style="display:none" onchange="previewImage(event, 'signImg', 'signPlaceholder')">
+        <span style="font-size:11px; font-weight:600; border-top:1px solid #94a3b8; width:100%; margin-top:4px;">Authorized Signatory</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- History Modal -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3>Saved Documents & Invoices</h3>
+        <button onclick="closeHistoryModal()" style="border:none; background:none; font-size:18px; cursor:pointer;">✕</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Doc No</th>
+            <th>Type</th>
+            <th>Party</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let currentGrandTotal = 0;
+    let qrInstance = null;
+
+    document.getElementById('docDate').valueAsDate = new Date();
+    let nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    document.getElementById('dueDate').valueAsDate = nextWeek;
+
+    /* ====== Amount in Indian Words ====== */
+    function numToWords(num) {
+      const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+      const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+      function inWords(n) {
+        if ((n = n.toString()).length > 9) return 'overflow';
+        let n_array = ('000000000' + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+        if (!n_array) return '';
+        let str = '';
+        str += (Number(n_array[1]) != 0) ? (a[Number(n_array[1])] || b[n_array[1][0]] + ' ' + a[n_array[1][1]]) + 'Crore ' : '';
+        str += (Number(n_array[2]) != 0) ? (a[Number(n_array[2])] || b[n_array[2][0]] + ' ' + a[n_array[2][1]]) + 'Lakh ' : '';
+        str += (Number(n_array[3]) != 0) ? (a[Number(n_array[3])] || b[n_array[3][0]] + ' ' + a[n_array[3][1]]) + 'Thousand ' : '';
+        str += (Number(n_array[4]) != 0) ? (a[Number(n_array[4])] || b[n_array[4][0]] + ' ' + a[n_array[4][1]]) + 'Hundred ' : '';
+        str += (Number(n_array[5]) != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n_array[5])] || b[n_array[5][0]] + ' ' + a[n_array[5][1]]) : '';
+        return str;
+      }
+
+      let whole = Math.floor(num);
+      let fraction = Math.round((num - whole) * 100);
+      let res = inWords(whole) + 'Rupees ';
+      if (fraction > 0) res += 'and ' + inWords(fraction) + 'Paise ';
+      return res + 'Only';
+    }
+
+    /* ====== Dynamic Calculations ====== */
+    function calculate() {
+      let subtotal = 0;
+      document.querySelectorAll('#billBody tr').forEach(row => {
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+        const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+        const disc = parseFloat(row.querySelector('.item-disc').value) || 0;
+        
+        const base = qty * rate;
+        const taxable = base - (base * disc / 100);
+        row.querySelector('.item-taxable').innerText = taxable.toFixed(2);
+        subtotal += taxable;
+      });
+
+      const taxRegime = document.getElementById('taxType').value;
+      const gstRate = parseFloat(document.getElementById('gstPercent').value) || 0;
+      const totalTax = (subtotal * gstRate) / 100;
+
+      if (taxRegime === 'INTRA') {
+        document.getElementById('cgstRow').style.display = 'table-row';
+        document.getElementById('sgstRow').style.display = 'table-row';
+        document.getElementById('igstRow').style.display = 'none';
+
+        const halfTax = totalTax / 2;
+        const halfRate = (gstRate / 2).toFixed(1);
+        document.getElementById('cgstRateLabel').innerText = `${halfRate}%`;
+        document.getElementById('sgstRateLabel').innerText = `${halfRate}%`;
+        document.getElementById('cgstAmount').innerText = `₹${halfTax.toFixed(2)}`;
+        document.getElementById('sgstAmount').innerText = `₹${halfTax.toFixed(2)}`;
+      } else {
+        document.getElementById('cgstRow').style.display = 'none';
+        document.getElementById('sgstRow').style.display = 'none';
+        document.getElementById('igstRow').style.display = 'table-row';
+
+        document.getElementById('igstRateLabel').innerText = `${gstRate}%`;
+        document.getElementById('igstAmount').innerText = `₹${totalTax.toFixed(2)}`;
+      }
+
+      const rawTotal = subtotal + totalTax;
+      const rounded = Math.round(rawTotal);
+      const roundOff = rounded - rawTotal;
+
+      currentGrandTotal = rounded;
+      document.getElementById('subTotal').innerText = `₹${subtotal.toFixed(2)}`;
+      document.getElementById('roundOffVal').innerText = `₹${roundOff.toFixed(2)}`;
+      document.getElementById('grandTotal').innerText = `₹${rounded.toFixed(2)}`;
+      document.getElementById('amountWords').innerText = numToWords(rounded);
+
+      updateQRCode();
+    }
+
+    /* ====== Table Row Actions ====== */
+    function addRow(desc='', hsn='', qty=1, rate=0, disc=0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" class="item-desc" placeholder="Product / Service" value="${desc}"></td>
+        <td><input type="text" class="item-hsn" placeholder="9983" value="${hsn}"></td>
+        <td><input type="number" class="text-center item-qty" value="${qty}" min="1" oninput="calculate()"></td>
+        <td><input type="number" class="text-right item-rate" value="${rate}" min="0" oninput="calculate()"></td>
+        <td><input type="number" class="text-center item-disc" value="${disc}" min="0" max="100" oninput="calculate()"></td>
+        <td class="text-right item-taxable">0.00</td>
+        <td class="text-center action-col"><button class="btn-del" onclick="deleteRow(this)">✕</button></td>
+      `;
+      document.getElementById('billBody').appendChild(tr);
+      calculate();
+    }
+
+    function deleteRow(btn) {
+      if (document.querySelectorAll('#billBody tr').length > 1) {
+        btn.closest('tr').remove();
+        calculate();
+      }
+    }
+
+    /* ====== Dynamic QR Code ====== */
+    function updateQRCode() {
+      const upi = document.getElementById('upiId').value.trim();
+      const comp = document.getElementById('compName').value.trim() || 'Merchant';
+      const container = document.getElementById('qrcode');
+      container.innerHTML = '';
+      if (!upi) return;
+
+      const uri = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(comp)}&am=${currentGrandTotal.toFixed(2)}&cu=INR`;
+      new QRCode(container, { text: uri, width: 85, height: 85 });
+    }
+
+    /* ====== Status & Meta Handlers ====== */
+    function updateStatusStamp() {
+      const st = document.getElementById('paymentStatus').value;
+      const badge = document.getElementById('statusStamp');
+      badge.innerText = st;
+      badge.className = `status-stamp status-${st}`;
+    }
+
+    function handleDocTypeChange() {
+      const select = document.getElementById('docType');
+      const opt = select.options[select.selectedIndex];
+      const prefix = opt.value;
+      document.getElementById('docTitle').innerText = opt.getAttribute('data-title');
+      
+      const year = new Date().getFullYear();
+      let cnt = parseInt(localStorage.getItem(`cnt_${prefix}_${year}`)) || 1;
+      document.getElementById('invoiceNumber').value = `${prefix}-${year}-${String(cnt).padStart(3, '0')}`;
+    }
+
+    /* ====== WhatsApp & Export Features ====== */
+    function shareWhatsApp() {
+      const phone = document.getElementById('partyMobile').value.replace(/\D/g, '');
+      if (!phone) { alert('Please enter client mobile number first.'); return; }
+      
+      const invoiceNo = document.getElementById('invoiceNumber').value;
+      const grandTotal = document.getElementById('grandTotal').innerText;
+      const comp = document.getElementById('compName').value || 'Our Business';
+      
+      const text = `*Greeting from ${comp}*%0A%0AYour *${document.getElementById('docTitle').innerText}* is ready:%0A📄 *Doc No:* ${invoiceNo}%0A💰 *Total Amount:* ${grandTotal}%0A📅 *Date:* ${document.getElementById('docDate').value}%0A%0APlease process payment using UPI or attached details.%0AThank you!`;
+      window.open(`https://wa.me/91${phone}?text=${text}`, '_blank');
+    }
+
+    function exportToCSV() {
+      let csv = "Item,HSN,Qty,Rate,Discount(%),Taxable Amount\n";
+      document.querySelectorAll('#billBody tr').forEach(r => {
+        csv += `"${r.querySelector('.item-desc').value}","${r.querySelector('.item-hsn').value}",${r.querySelector('.item-qty').value},${r.querySelector('.item-rate').value},${r.querySelector('.item-disc').value},${r.querySelector('.item-taxable').innerText}\n`;
+      });
+      csv += `\nSubtotal,,,,,${document.getElementById('subTotal').innerText}\nGrand Total,,,,,${document.getElementById('grandTotal').innerText}\n`;
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${document.getElementById('invoiceNumber').value}.csv`;
+      a.click();
+    }
+
+    function backupJSON() {
+      const data = localStorage.getItem('billing_pro_suite_db') || '[]';
+      const blob = new Blob([data], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `billing_backup_${Date.now()}.json`;
+      a.click();
+    }
+
+    /* ====== Storage & History ====== */
+    function saveCurrentInvoice() {
+      const items = [];
+      document.querySelectorAll('#billBody tr').forEach(r => {
+        items.push({
+          desc: r.querySelector('.item-desc').value,
+          hsn: r.querySelector('.item-hsn').value,
+          qty: r.querySelector('.item-qty').value,
+          rate: r.querySelector('.item-rate').value,
+          disc: r.querySelector('.item-disc').value
+        });
+      });
+
+      const inv = {
+        id: document.getElementById('invoiceNumber').value,
+        docType: document.getElementById('docType').value,
+        status: document.getElementById('paymentStatus').value,
+        docDate: document.getElementById('docDate').value,
+        dueDate: document.getElementById('dueDate').value,
+        partyName: document.getElementById('partyName').value,
+        partyMobile: document.getElementById('partyMobile').value,
+        partyGst: document.getElementById('partyGst').value,
+        partyAddress: document.getElementById('partyAddress').value,
+        taxType: document.getElementById('taxType').value,
+        gstPercent: document.getElementById('gstPercent').value,
+        total: currentGrandTotal,
+        items: items
+      };
+
+      let db = JSON.parse(localStorage.getItem('billing_pro_suite_db') || '[]');
+      const idx = db.findIndex(x => x.id === inv.id);
+      if (idx >= 0) db[idx] = inv; else db.unshift(inv);
+      
+      localStorage.setItem('billing_pro_suite_db', JSON.stringify(db));
+      saveClientDirectory(inv.partyName, inv.partyMobile, inv.partyGst, inv.partyAddress);
+      updateHistoryCount();
+      alert(`Invoice ${inv.id} saved successfully!`);
+    }
+
+    function saveClientDirectory(name, mobile, gst, addr) {
+      if (!name) return;
+      let clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
+      clients[name] = { mobile, gst, addr };
+      localStorage.setItem('clients_dir', JSON.stringify(clients));
+      populateClientsDropdown();
+    }
+
+    function populateClientsDropdown() {
+      const clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
+      const dl = document.getElementById('clientList');
+      dl.innerHTML = '';
+      for (let k in clients) {
+        let opt = document.createElement('option');
+        opt.value = k;
+        dl.appendChild(opt);
+      }
+    }
+
+    function autoFillClient(name) {
+      const clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
+      if (clients[name]) {
+        document.getElementById('partyMobile').value = clients[name].mobile;
+        document.getElementById('partyGst').value = clients[name].gst;
+        document.getElementById('partyAddress').value = clients[name].addr;
+      }
+    }
+
+    function updateHistoryCount() {
+      const db = JSON.parse(localStorage.getItem('billing_pro_suite_db') || '[]');
+      document.getElementById('historyCount').innerText = db.length;
+    }
+
+    function openHistoryModal() {
+      const db = JSON.parse(localStorage.getItem('billing_pro_suite_db') || '[]');
+      const tbody = document.getElementById('historyBody');
+      tbody.innerHTML = '';
+      db.forEach(x => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${x.id}</strong></td>
+          <td>${x.docType}</td>
+          <td>${x.partyName || '-'}</td>
+          <td>${x.docDate}</td>
+          <td>₹${x.total}</td>
+          <td class="text-center">
+            <button class="btn btn-primary" style="padding:2px 6px; font-size:11px;" onclick="loadInvoice('${x.id}')">Load</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('historyModal').style.display = 'flex';
+    }
+
+    function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
+
+    function loadInvoice(id) {
+      const db = JSON.parse(localStorage.getItem('billing_pro_suite_db') || '[]');
+      const inv = db.find(x => x.id === id);
+      if (!inv) return;
+
+      document.getElementById('docType').value = inv.docType;
+      handleDocTypeChange();
+      document.getElementById('invoiceNumber').value = inv.id;
+      document.getElementById('paymentStatus').value = inv.status;
+      updateStatusStamp();
+      document.getElementById('docDate').value = inv.docDate;
+      document.getElementById('dueDate').value = inv.dueDate;
+      document.getElementById('partyName').value = inv.partyName;
+      document.getElementById('partyMobile').value = inv.partyMobile;
+      document.getElementById('partyGst').value = inv.partyGst;
+      document.getElementById('partyAddress').value = inv.partyAddress;
+      document.getElementById('taxType').value = inv.taxType;
+      document.getElementById('gstPercent').value = inv.gstPercent;
+
+      const tb = document.getElementById('billBody');
+      tb.innerHTML = '';
+      inv.items.forEach(i => addRow(i.desc, i.hsn, i.qty, i.rate, i.disc));
+      closeHistoryModal();
+    }
+
+    function printInvoice() {
+      saveCurrentInvoice();
+      window.print();
+    }
+
+    function resetForm() {
+      if (confirm("Clear and start new bill?")) {
+        document.getElementById('billBody').innerHTML = '';
+        document.getElementById('partyName').value = '';
+        document.getElementById('partyMobile').value = '';
+        document.getElementById('partyGst').value = '';
+        document.getElementById('partyAddress').value = '';
+        addRow();
+        handleDocTypeChange();
+      }
+    }
+
+    function previewImage(e, imgId, phId) {
+      const f = e.target.files[0];
+      if (f) {
+        const r = new FileReader();
+        r.onload = ev => {
+          document.getElementById(imgId).src = ev.target.result;
+          document.getElementById(imgId).style.display = 'block';
+          if(phId) document.getElementById(phId).style.display = 'none';
+        };
+        r.readAsDataURL(f);
+      }
+    }
+
+    // Init Page
+    addRow();
+    handleDocTypeChange();
+    updateHistoryCount();
+    populateClientsDropdown();
+  </script>
+</body>
+</html>
