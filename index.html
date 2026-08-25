@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Billing & Quotation Suite</title>
+  <title>Smart Billing & Invoicing Suite</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -49,11 +49,12 @@
     .btn-primary { background: #2563eb; color: white; }
     .btn-success { background: #16a34a; color: white; }
     .btn-whatsapp { background: #25d366; color: white; }
+    .btn-email { background: #ea4335; color: white; }
     .btn-dark { background: #334155; color: white; }
     .btn-amber { background: #d97706; color: white; }
     .btn:hover { opacity: 0.9; }
 
-    /* Header & Balanced Branding Grid */
+    /* Header & Branding */
     .brand-section {
       display: flex;
       justify-content: space-between;
@@ -83,14 +84,8 @@
       flex-shrink: 0;
     }
     .logo-box img { max-width: 100%; max-height: 70px; object-fit: contain; }
-    .brand-left-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .brand-right {
-      flex: 1;
-      min-width: 0;
-    }
+    .brand-left-info { flex: 1; min-width: 0; }
+    .brand-right { flex: 1; min-width: 0; }
     
     /* Key-Value Form Rows */
     .info-row {
@@ -276,6 +271,7 @@
       .table-wrapper { overflow: visible !important; }
       table { min-width: 100% !important; }
       .brand-section, .doc-meta-section, .client-section, .calculation-grid, .footer-grid { flex-direction: row !important; }
+      .company-meta { width: 400px !important; }
       .logo-box { border: none; width: 120px; }
       #sameAsBillingLabel { display: none !important; }
     }
@@ -293,6 +289,7 @@
         <button class="btn btn-amber" onclick="saveCompanyProfile()">🏢 Company</button>
         <button class="btn btn-dark" onclick="openHistoryModal()">📂 History (<span id="historyCount">0</span>)</button>
         <button class="btn btn-whatsapp" onclick="shareWhatsApp()">📱 WhatsApp</button>
+        <button class="btn btn-email" onclick="shareEmail()">✉️ Email</button>
       </div>
       <div class="btn-group" style="margin-top: 4px;">
         <button class="btn btn-success" onclick="downloadDirectPDF()">📥 PDF</button>
@@ -300,7 +297,7 @@
       </div>
     </div>
 
-    <!-- Company Branding Header (Balanced Left-Right Layout) -->
+    <!-- Company Branding Header -->
     <div class="brand-section">
       <div class="brand-left">
         <div>
@@ -362,6 +359,7 @@
             <option value="INV" selected>Tax Invoice</option>
             <option value="QT">Quotation / Estimate</option>
             <option value="PO">Purchase Order (PO)</option>
+            <option value="PI">Proforma Invoice (PI)</option>
           </select>
         </div>
       </div>
@@ -393,6 +391,10 @@
         <div class="info-row">
           <label>Mobile No :</label>
           <input type="text" id="partyMobile" placeholder="Contact Number">
+        </div>
+        <div class="info-row">
+          <label>Email ID :</label>
+          <input type="email" id="partyEmail" placeholder="client@domain.com">
         </div>
         <div class="info-row">
           <label id="lblPartyGst">GSTIN :</label>
@@ -503,7 +505,7 @@
 
     <!-- Footer: Bank, QR & Signature -->
     <div class="footer-grid">
-      <!-- Bank Details (Hidden on QT / PO) -->
+      <!-- Bank Details (Hidden on Quotation) -->
       <div class="footer-box" id="bankDetailsBox">
         <h5>Bank Details</h5>
         <div class="info-row">
@@ -524,7 +526,7 @@
         </div>
       </div>
 
-      <!-- Scan QR (Hidden on QT / PO) -->
+      <!-- Scan QR (Hidden on Quotation) -->
       <div class="qr-card" id="qrCardBox">
         <h5>Scan to Pay</h5>
         <div id="qrcode"></div>
@@ -604,17 +606,18 @@
       });
     }
 
-    /* ====== Dynamic Category Switch (Sales vs Service) ====== */
+    /* ====== Category Switch ====== */
     function handleCategoryChange() {
       const category = document.getElementById('billCategory').value;
       const isService = category === 'SERVICE';
 
+      // Table Header Switch
       document.getElementById('thDesc').innerText = isService ? 'Service Description' : 'Item / Product Name';
       document.getElementById('thCode').innerText = isService ? 'SAC Code' : 'HSN Code';
-      document.getElementById('thRate').innerText = isService ? 'Service Fee (₹)' : 'Rate (₹)';
+      document.getElementById('thRate').innerText = isService ? 'Rate / Fee (₹)' : 'Rate (₹)';
 
-      document.querySelectorAll('.col-qty').forEach(el => el.style.display = isService ? 'none' : '');
-      document.querySelectorAll('.col-unit').forEach(el => el.style.display = isService ? 'none' : '');
+      // Service mode me "Billing Addr" -> "Address :"
+      document.getElementById('lblPartyAddress').innerText = isService ? 'Address :' : 'Billing Addr :';
 
       const secondPartyHeading = document.getElementById('secondPartyHeading');
       const lblSecondName = document.getElementById('lblSecondName');
@@ -643,12 +646,11 @@
       calculate();
     }
 
-    /* ====== Dynamic DocType Switch (Hides Bank, QR, GST & Shipped on QT/PO) ====== */
+    /* ====== Dynamic DocType Switch (INV, QT, PO, PI) ====== */
     function handleDocTypeChange() {
       const docType = document.getElementById('docType').value;
       const category = document.getElementById('billCategory').value;
       const isQuotation = docType === 'QT';
-      const isPO = docType === 'PO';
 
       const title = document.getElementById('docTitle');
       const partyHeading = document.getElementById('partyHeading');
@@ -666,8 +668,8 @@
       const year = new Date().getFullYear();
       let cnt = parseInt(localStorage.getItem(`cnt_${docType}_${year}`)) || 1;
 
-      // Hide/Show Bank & QR Details on Quotation and Purchase Order
-      if (isQuotation || isPO) {
+      // Show Bank & QR for all except Quotation
+      if (isQuotation) {
         bankDetailsBox.style.display = 'none';
         qrCardBox.style.display = 'none';
       } else {
@@ -684,7 +686,6 @@
         lblDocDate.innerText = 'Quote Date :';
         document.getElementById('invoiceNumber').value = `QT-${year}-${String(cnt).padStart(3, '0')}`;
 
-        // Hide Shipped Addr, GST Column & Supply Type on Quotation
         secondPartyCol.style.display = 'none';
         supplyTypeBox.style.display = 'none';
         document.querySelectorAll('.col-gst').forEach(el => el.style.display = 'none');
@@ -702,7 +703,20 @@
         supplyTypeBox.style.display = 'block';
         document.querySelectorAll('.col-gst').forEach(el => el.style.display = '');
         subtotalLabel.innerText = 'Taxable Subtotal:';
-      } else if (isPO) {
+      } else if (docType === 'PI') {
+        title.innerText = 'PROFORMA INVOICE';
+        partyHeading.innerText = category === 'SERVICE' ? 'Billed To (Client)' : 'Billed To (Buyer)';
+        lblPartyName.innerText = 'Name :';
+        lblPartyGst.innerText = 'GSTIN :';
+        lblDocNo.innerText = 'PI Number :';
+        lblDocDate.innerText = 'PI Date :';
+        document.getElementById('invoiceNumber').value = `PI-${year}-${String(cnt).padStart(3, '0')}`;
+
+        secondPartyCol.style.display = 'block';
+        supplyTypeBox.style.display = 'block';
+        document.querySelectorAll('.col-gst').forEach(el => el.style.display = '');
+        subtotalLabel.innerText = 'Taxable Subtotal:';
+      } else if (docType === 'PO') {
         title.innerText = 'PURCHASE ORDER';
         partyHeading.innerText = 'Vendor (Supplier)';
         lblPartyName.innerText = 'Name :';
@@ -746,12 +760,11 @@
     function calculate() {
       let subtotal = 0;
       let isInterState = document.getElementById('placeOfSupply').value === 'OTHER';
-      let isService = document.getElementById('billCategory').value === 'SERVICE';
       let isQuotation = document.getElementById('docType').value === 'QT';
       let totalTax = 0;
 
       document.querySelectorAll('#billBody tr').forEach(row => {
-        const qty = isService ? 1 : (parseFloat(row.querySelector('.item-qty').value) || 0);
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
         const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
         const gstRate = isQuotation ? 0 : (parseFloat(row.querySelector('.item-gst').value) || 0);
 
@@ -806,8 +819,8 @@
         <td class="text-center font-weight-bold"><span class="sr-no"></span></td>
         <td><input type="text" class="item-desc" placeholder="${isService ? 'Service Details' : 'Product Name'}" value="${desc}"></td>
         <td><input type="text" class="item-code" placeholder="${isService ? 'SAC Code' : 'HSN Code'}" value="${code}"></td>
-        <td class="col-qty" style="${isService ? 'display:none;' : ''}"><input type="number" class="text-center item-qty" value="${qty}" min="1" oninput="calculate()"></td>
-        <td class="col-unit" style="${isService ? 'display:none;' : ''}">
+        <td class="col-qty"><input type="number" class="text-center item-qty" value="${qty}" min="1" oninput="calculate()"></td>
+        <td class="col-unit">
           <select class="item-unit" style="font-size:11px;">
             <option value="Nos" ${unit==='Nos'?'selected':''}>Nos</option>
             <option value="Day" ${unit==='Day'?'selected':''}>Day</option>
@@ -948,14 +961,27 @@
       window.open(`https://wa.me/91${phone}?text=${text}`, '_blank');
     }
 
+    function shareEmail() {
+      const email = document.getElementById('partyEmail').value.trim();
+      const invoiceNo = document.getElementById('invoiceNumber').value;
+      const docTitle = document.getElementById('docTitle').innerText;
+      const comp = document.getElementById('compName').value || 'Our Firm';
+      const grandTotal = document.getElementById('grandTotal').innerText;
+
+      const subject = encodeURIComponent(`${docTitle} - ${invoiceNo} from ${comp}`);
+      const body = encodeURIComponent(`Dear ${document.getElementById('partyName').value || 'Customer'},\n\nPlease find the details for your ${docTitle} below:\n\nDocument No: ${invoiceNo}\nDate: ${document.getElementById('docDate').value}\nTotal Amount: ${grandTotal}\n\nKindly process the necessary steps/payment.\n\nBest Regards,\n${comp}`);
+
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    }
+
     function saveCurrentInvoice() {
       const items = [];
       document.querySelectorAll('#billBody tr').forEach(r => {
         items.push({
           desc: r.querySelector('.item-desc').value,
           code: r.querySelector('.item-code').value,
-          qty: r.querySelector('.item-qty') ? r.querySelector('.item-qty').value : 1,
-          unit: r.querySelector('.item-unit') ? r.querySelector('.item-unit').value : 'Nos',
+          qty: r.querySelector('.item-qty').value,
+          unit: r.querySelector('.item-unit').value,
           rate: r.querySelector('.item-rate').value,
           gst: r.querySelector('.item-gst') ? r.querySelector('.item-gst').value : '0'
         });
@@ -968,6 +994,7 @@
         docDate: document.getElementById('docDate').value,
         partyName: document.getElementById('partyName').value,
         partyMobile: document.getElementById('partyMobile').value,
+        partyEmail: document.getElementById('partyEmail').value,
         partyGst: document.getElementById('partyGst').value,
         partyStateCode: document.getElementById('partyStateCode').value,
         placeOfSupply: document.getElementById('placeOfSupply').value,
@@ -989,6 +1016,7 @@
         let clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
         clients[inv.partyName] = { 
           mobile: inv.partyMobile, 
+          email: inv.partyEmail,
           gst: inv.partyGst, 
           addr: inv.partyAddress, 
           stateCode: inv.partyStateCode,
@@ -1019,6 +1047,7 @@
       const clients = JSON.parse(localStorage.getItem('clients_dir') || '{}');
       if (clients[name]) {
         document.getElementById('partyMobile').value = clients[name].mobile || '';
+        document.getElementById('partyEmail').value = clients[name].email || '';
         document.getElementById('partyGst').value = clients[name].gst || '';
         document.getElementById('partyAddress').value = clients[name].addr || '';
         document.getElementById('partyStateCode').value = clients[name].stateCode || '';
@@ -1071,6 +1100,7 @@
       
       document.getElementById('partyName').value = inv.partyName || '';
       document.getElementById('partyMobile').value = inv.partyMobile || '';
+      document.getElementById('partyEmail').value = inv.partyEmail || '';
       document.getElementById('partyGst').value = inv.partyGst || '';
       document.getElementById('partyStateCode').value = inv.partyStateCode || '';
       document.getElementById('placeOfSupply').value = inv.placeOfSupply || 'SAME';
@@ -1091,6 +1121,7 @@
         document.getElementById('billBody').innerHTML = '';
         document.getElementById('partyName').value = '';
         document.getElementById('partyMobile').value = '';
+        document.getElementById('partyEmail').value = '';
         document.getElementById('partyGst').value = '';
         document.getElementById('partyStateCode').value = '';
         document.getElementById('partyAddress').value = '';
@@ -1118,7 +1149,6 @@
 
     loadCompanyProfile();
     addRow();
-    handleDocTypeChange();
     handleCategoryChange();
     updateHistoryCount();
     populateClientsDropdown();
