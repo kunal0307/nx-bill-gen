@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Sales & Service Billing Suite</title>
+  <title>Smart Billing & Quotation Suite</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -111,19 +111,6 @@
       margin-bottom: 15px;
       gap: 15px;
     }
-    .status-stamp {
-      font-weight: 800;
-      font-size: 12px;
-      padding: 2px 8px;
-      border: 2px solid;
-      border-radius: 4px;
-      display: inline-block;
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-    .status-PAID { color: #16a34a; border-color: #16a34a; }
-    .status-UNPAID { color: #dc2626; border-color: #dc2626; }
-    .status-DUE { color: #d97706; border-color: #d97706; }
 
     /* Party Details */
     .client-section {
@@ -152,7 +139,7 @@
       -webkit-overflow-scrolling: touch;
       margin-bottom: 10px;
     }
-    table { width: 100%; min-width: 600px; border-collapse: collapse; }
+    table { width: 100%; min-width: 650px; border-collapse: collapse; }
     table th, table td { border: 1px solid #e2e8f0; padding: 6px; font-size: 12px; }
     table th { background: #f1f5f9; font-weight: 600; text-align: left; }
     table input, table select { width: 100%; border: none; outline: none; background: transparent; font-size: 12px; }
@@ -313,13 +300,17 @@
           <input type="text" id="compPhone" placeholder="+91 9876543210">
         </div>
         <div class="info-row">
+          <label>Email ID :</label>
+          <input type="email" id="compEmail" placeholder="contact@yourcompany.com">
+        </div>
+        <div class="info-row">
           <label>GSTIN :</label>
           <input type="text" id="compGst" placeholder="07AAAAA0000A1Z5" oninput="calculate()">
         </div>
       </div>
     </div>
 
-    <!-- Document Meta & Category -->
+    <!-- Document Meta & Relocated Supply Type -->
     <div class="doc-meta-section">
       <div style="width: 320px;">
         <div class="info-row">
@@ -337,16 +328,12 @@
             <option value="PO">Purchase Order (PO)</option>
           </select>
         </div>
-        <div class="info-row" id="statusFieldRow">
-          <label>Status :</label>
-          <select id="paymentStatus" onchange="updateStatusStamp()">
-            <option value="PAID">PAID</option>
-            <option value="UNPAID" selected>UNPAID</option>
-            <option value="DUE">DUE</option>
+        <div class="info-row">
+          <label>Supply Type :</label>
+          <select id="placeOfSupply" onchange="calculate()">
+            <option value="SAME" selected>Intra-State (CGST + SGST)</option>
+            <option value="OTHER">Inter-State (IGST)</option>
           </select>
-        </div>
-        <div style="margin-left: 105px;">
-          <span id="statusStamp" class="status-stamp status-UNPAID">UNPAID</span>
         </div>
       </div>
 
@@ -359,10 +346,6 @@
         <div class="info-row">
           <label id="lblDocDate">Invoice Date :</label>
           <input type="date" id="docDate">
-        </div>
-        <div class="info-row" id="secondDateRow">
-          <label id="lblSecondDate">Due Date :</label>
-          <input type="date" id="dueDate">
         </div>
       </div>
     </div>
@@ -382,8 +365,6 @@
           <label>Mobile No :</label>
           <input type="text" id="partyMobile" placeholder="Contact Number">
         </div>
-        
-        <!-- GST, State & Supply Type Together -->
         <div class="info-row">
           <label id="lblPartyGst">GSTIN :</label>
           <input type="text" id="partyGst" placeholder="GST Number (Optional)" oninput="autoDetectStateFromGST()">
@@ -392,17 +373,9 @@
           <label>State Code :</label>
           <input type="text" id="partyStateCode" placeholder="e.g. 07 - Delhi" oninput="calculate()">
         </div>
-        <div class="info-row">
-          <label>Supply Type :</label>
-          <select id="placeOfSupply" onchange="calculate()">
-            <option value="SAME" selected>Intra-State (CGST + SGST)</option>
-            <option value="OTHER">Inter-State (IGST)</option>
-          </select>
-        </div>
-
         <div class="info-row" style="align-items: flex-start; margin-top: 6px;">
           <label id="lblPartyAddress">Billing Addr :</label>
-          <textarea id="partyAddress" rows="2" placeholder="Full Billing Address with PIN" oninput="syncAddresses()"></textarea>
+          <textarea id="partyAddress" rows="3" placeholder="Full Billing Address with PIN" oninput="syncAddresses()"></textarea>
         </div>
       </div>
 
@@ -419,13 +392,10 @@
           <label id="lblSecondName">Ship Name :</label>
           <input type="text" id="secondName" placeholder="Delivery / Consignee Name">
         </div>
-
-        <!-- Shipped / Service GSTIN Field -->
         <div class="info-row">
           <label id="lblSecondGst">Ship GSTIN :</label>
           <input type="text" id="secondGst" placeholder="Shipment / Site GSTIN (Optional)">
         </div>
-
         <div class="info-row" style="align-items: flex-start;">
           <label id="lblSecondAddress">Ship Addr :</label>
           <textarea id="secondAddress" rows="4" placeholder="Full Delivery Address with State & PIN"></textarea>
@@ -433,17 +403,18 @@
       </div>
     </div>
 
-    <!-- Responsive Items Table -->
+    <!-- Responsive Items Table with Sr No (#) -->
     <div class="table-wrapper">
       <table id="billTable">
         <thead>
           <tr>
-            <th style="width: 34%;" id="thDesc">Item / Product Name</th>
-            <th style="width: 14%;" id="thCode">HSN Code</th>
-            <th style="width: 9%;" class="text-center col-qty">Qty</th>
-            <th style="width: 11%;" class="text-center col-unit">Unit</th>
+            <th style="width: 5%;" class="text-center">#</th>
+            <th style="width: 32%;" id="thDesc">Item / Product Name</th>
+            <th style="width: 13%;" id="thCode">HSN Code</th>
+            <th style="width: 8%;" class="text-center col-qty">Qty</th>
+            <th style="width: 10%;" class="text-center col-unit">Unit</th>
             <th style="width: 14%;" class="text-right" id="thRate">Rate (₹)</th>
-            <th style="width: 12%;" class="text-center">GST %</th>
+            <th style="width: 10%;" class="text-center">GST %</th>
             <th style="width: 14%;" class="text-right">Total (₹)</th>
             <th style="width: 4%;" class="text-center action-col" data-html2canvas-ignore="true"></th>
           </tr>
@@ -518,7 +489,7 @@
 
       <div class="footer-box">
         <h5>Terms & Conditions</h5>
-        <textarea id="termsText" rows="4" placeholder="1. Payment within due date.&#10;2. Subject to local jurisdiction."></textarea>
+        <textarea id="termsText" rows="4" placeholder="1. Payment within stipulated time.&#10;2. Subject to local jurisdiction."></textarea>
       </div>
 
       <div class="sign-box" onclick="document.getElementById('signInput').click()">
@@ -568,9 +539,6 @@
     };
 
     document.getElementById('docDate').valueAsDate = new Date();
-    let due = new Date();
-    due.setDate(due.getDate() + 7);
-    document.getElementById('dueDate').valueAsDate = due;
 
     /* ====== Sync Billed To & Second Address ====== */
     function syncAddresses() {
@@ -584,12 +552,19 @@
     document.getElementById('partyName').addEventListener('input', syncAddresses);
     document.getElementById('partyGst').addEventListener('input', syncAddresses);
 
+    /* ====== Update Sr No (#) on all rows ====== */
+    function updateRowIndices() {
+      document.querySelectorAll('#billBody tr').forEach((row, index) => {
+        const srSpan = row.querySelector('.sr-no');
+        if (srSpan) srSpan.innerText = index + 1;
+      });
+    }
+
     /* ====== Dynamic Category Switch (Sales vs Service) ====== */
     function handleCategoryChange() {
       const category = document.getElementById('billCategory').value;
       const isService = category === 'SERVICE';
 
-      // Table Header Switch
       document.getElementById('thDesc').innerText = isService ? 'Service Description' : 'Item / Product Name';
       document.getElementById('thCode').innerText = isService ? 'SAC Code' : 'HSN Code';
       document.getElementById('thRate').innerText = isService ? 'Service Fee (₹)' : 'Rate (₹)';
@@ -597,7 +572,6 @@
       document.querySelectorAll('.col-qty').forEach(el => el.style.display = isService ? 'none' : '');
       document.querySelectorAll('.col-unit').forEach(el => el.style.display = isService ? 'none' : '');
 
-      // Right-side Block Switch (Shipped To vs Service Details)
       const secondPartyHeading = document.getElementById('secondPartyHeading');
       const lblSecondName = document.getElementById('lblSecondName');
       const lblSecondGst = document.getElementById('lblSecondGst');
@@ -634,9 +608,6 @@
       const lblPartyGst = document.getElementById('lblPartyGst');
       const lblDocNo = document.getElementById('lblDocNo');
       const lblDocDate = document.getElementById('lblDocDate');
-      const lblSecondDate = document.getElementById('lblSecondDate');
-      const statusFieldRow = document.getElementById('statusFieldRow');
-      const statusStamp = document.getElementById('statusStamp');
 
       const year = new Date().getFullYear();
       let cnt = parseInt(localStorage.getItem(`cnt_${docType}_${year}`)) || 1;
@@ -648,9 +619,6 @@
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'Invoice No :';
         lblDocDate.innerText = 'Invoice Date :';
-        lblSecondDate.innerText = 'Due Date :';
-        statusFieldRow.style.display = 'flex';
-        statusStamp.style.display = 'inline-block';
         document.getElementById('invoiceNumber').value = `INV-${year}-${String(cnt).padStart(3, '0')}`;
       } else if (docType === 'QT') {
         title.innerText = 'QUOTATION / ESTIMATE';
@@ -659,9 +627,6 @@
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'Quote Ref :';
         lblDocDate.innerText = 'Quote Date :';
-        lblSecondDate.innerText = 'Valid Till :';
-        statusFieldRow.style.display = 'none';
-        statusStamp.style.display = 'none';
         document.getElementById('invoiceNumber').value = `QT-${year}-${String(cnt).padStart(3, '0')}`;
       } else if (docType === 'PO') {
         title.innerText = 'PURCHASE ORDER';
@@ -670,9 +635,6 @@
         lblPartyGst.innerText = 'GSTIN :';
         lblDocNo.innerText = 'PO Number :';
         lblDocDate.innerText = 'PO Date :';
-        lblSecondDate.innerText = 'Delivery Date :';
-        statusFieldRow.style.display = 'none';
-        statusStamp.style.display = 'none';
         document.getElementById('invoiceNumber').value = `PO-${year}-${String(cnt).padStart(3, '0')}`;
       }
     }
@@ -746,15 +708,18 @@
       updateQRCode();
     }
 
-    function addRow(desc='', code='', qty=1, unit='Pcs', rate=0, gst='18') {
+    function addRow(desc='', code='', qty=1, unit='Nos', rate=0, gst='18') {
       const isService = document.getElementById('billCategory').value === 'SERVICE';
       const tr = document.createElement('tr');
       tr.innerHTML = `
+        <td class="text-center font-weight-bold"><span class="sr-no"></span></td>
         <td><input type="text" class="item-desc" placeholder="${isService ? 'Service Details' : 'Product Name'}" value="${desc}"></td>
         <td><input type="text" class="item-code" placeholder="${isService ? 'SAC Code' : 'HSN Code'}" value="${code}"></td>
         <td class="col-qty" style="${isService ? 'display:none;' : ''}"><input type="number" class="text-center item-qty" value="${qty}" min="1" oninput="calculate()"></td>
         <td class="col-unit" style="${isService ? 'display:none;' : ''}">
           <select class="item-unit" style="font-size:11px;">
+            <option value="Nos" ${unit==='Nos'?'selected':''}>Nos</option>
+            <option value="Day" ${unit==='Day'?'selected':''}>Day</option>
             <option value="Pcs" ${unit==='Pcs'?'selected':''}>Pcs</option>
             <option value="Kg" ${unit==='Kg'?'selected':''}>Kg</option>
             <option value="Mtr" ${unit==='Mtr'?'selected':''}>Mtr</option>
@@ -778,12 +743,14 @@
         <td class="text-center action-col" data-html2canvas-ignore="true"><button class="btn-del" onclick="deleteRow(this)">✕</button></td>
       `;
       document.getElementById('billBody').appendChild(tr);
+      updateRowIndices();
       calculate();
     }
 
     function deleteRow(btn) {
       if (document.querySelectorAll('#billBody tr').length > 1) {
         btn.closest('tr').remove();
+        updateRowIndices();
         calculate();
       }
     }
@@ -793,6 +760,7 @@
         name: document.getElementById('compName').value,
         addr: document.getElementById('compAddress').value,
         phone: document.getElementById('compPhone').value,
+        email: document.getElementById('compEmail').value,
         gst: document.getElementById('compGst').value,
         bank: document.getElementById('bankName').value,
         acc: document.getElementById('accNo').value,
@@ -812,6 +780,7 @@
       if (comp.name) document.getElementById('compName').value = comp.name;
       if (comp.addr) document.getElementById('compAddress').value = comp.addr;
       if (comp.phone) document.getElementById('compPhone').value = comp.phone;
+      if (comp.email) document.getElementById('compEmail').value = comp.email;
       if (comp.gst) document.getElementById('compGst').value = comp.gst;
       if (comp.bank) document.getElementById('bankName').value = comp.bank;
       if (comp.acc) document.getElementById('accNo').value = comp.acc;
@@ -884,13 +853,6 @@
       window.open(`https://wa.me/91${phone}?text=${text}`, '_blank');
     }
 
-    function updateStatusStamp() {
-      const st = document.getElementById('paymentStatus').value;
-      const badge = document.getElementById('statusStamp');
-      badge.innerText = st;
-      badge.className = `status-stamp status-${st}`;
-    }
-
     function saveCurrentInvoice() {
       const items = [];
       document.querySelectorAll('#billBody tr').forEach(r => {
@@ -898,7 +860,7 @@
           desc: r.querySelector('.item-desc').value,
           code: r.querySelector('.item-code').value,
           qty: r.querySelector('.item-qty') ? r.querySelector('.item-qty').value : 1,
-          unit: r.querySelector('.item-unit') ? r.querySelector('.item-unit').value : 'Pcs',
+          unit: r.querySelector('.item-unit') ? r.querySelector('.item-unit').value : 'Nos',
           rate: r.querySelector('.item-rate').value,
           gst: r.querySelector('.item-gst').value
         });
@@ -908,9 +870,7 @@
         id: document.getElementById('invoiceNumber').value,
         category: document.getElementById('billCategory').value,
         docType: document.getElementById('docType').value,
-        status: document.getElementById('paymentStatus').value,
         docDate: document.getElementById('docDate').value,
-        dueDate: document.getElementById('dueDate').value,
         partyName: document.getElementById('partyName').value,
         partyMobile: document.getElementById('partyMobile').value,
         partyGst: document.getElementById('partyGst').value,
@@ -1013,10 +973,7 @@
       handleCategoryChange();
       handleDocTypeChange();
       document.getElementById('invoiceNumber').value = inv.id;
-      document.getElementById('paymentStatus').value = inv.status;
-      updateStatusStamp();
       document.getElementById('docDate').value = inv.docDate;
-      document.getElementById('dueDate').value = inv.dueDate;
       
       document.getElementById('partyName').value = inv.partyName || '';
       document.getElementById('partyMobile').value = inv.partyMobile || '';
