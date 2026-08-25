@@ -53,18 +53,24 @@
     .btn-amber { background: #d97706; color: white; }
     .btn:hover { opacity: 0.9; }
 
-    /* Header & Branding */
+    /* Header & Balanced Branding Grid */
     .brand-section {
       display: flex;
       justify-content: space-between;
       border-bottom: 2px solid #2563eb;
-      padding-bottom: 12px;
+      padding-bottom: 15px;
       margin-bottom: 15px;
+      gap: 20px;
+    }
+    .brand-left {
+      display: flex;
       gap: 15px;
+      flex: 1.1;
+      min-width: 0;
     }
     .logo-box {
-      width: 130px;
-      min-height: 60px;
+      width: 120px;
+      min-height: 75px;
       border: 1px dashed #cbd5e1;
       display: flex;
       align-items: center;
@@ -74,9 +80,17 @@
       cursor: pointer;
       border-radius: 4px;
       background: #fafafa;
+      flex-shrink: 0;
     }
-    .logo-box img { max-width: 100%; max-height: 65px; object-fit: contain; }
-    .company-meta { width: 400px; }
+    .logo-box img { max-width: 100%; max-height: 70px; object-fit: contain; }
+    .brand-left-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .brand-right {
+      flex: 1;
+      min-width: 0;
+    }
     
     /* Key-Value Form Rows */
     .info-row {
@@ -86,7 +100,7 @@
       font-size: 12px;
     }
     .info-row label {
-      width: 105px;
+      width: 95px;
       font-weight: 600;
       color: #475569;
       flex-shrink: 0;
@@ -238,11 +252,11 @@
     @media (max-width: 768px) {
       body { padding: 4px; }
       .invoice-card { padding: 12px; }
-      .brand-section, .doc-meta-section, .client-section, .calculation-grid, .footer-grid, .action-toolbar {
+      .brand-section, .brand-left, .doc-meta-section, .client-section, .calculation-grid, .footer-grid, .action-toolbar {
         flex-direction: column;
         align-items: stretch;
       }
-      .company-meta, .doc-meta-section > div, .left-calc-pane, .totals-table, .btn-group { width: 100% !important; }
+      .brand-left, .brand-right, .doc-meta-section > div, .left-calc-pane, .totals-table, .btn-group { width: 100% !important; }
       .logo-box { width: 100%; height: 70px; }
       #docTitle { text-align: left !important; margin-top: 10px; }
       .btn { flex: 1 1 calc(50% - 6px); justify-content: center; }
@@ -262,8 +276,7 @@
       .table-wrapper { overflow: visible !important; }
       table { min-width: 100% !important; }
       .brand-section, .doc-meta-section, .client-section, .calculation-grid, .footer-grid { flex-direction: row !important; }
-      .company-meta { width: 400px !important; }
-      .logo-box { border: none; width: 140px; }
+      .logo-box { border: none; width: 120px; }
       #sameAsBillingLabel { display: none !important; }
     }
   </style>
@@ -287,25 +300,33 @@
       </div>
     </div>
 
-    <!-- Company Branding Header -->
+    <!-- Company Branding Header (Balanced Left-Right Layout) -->
     <div class="brand-section">
-      <div>
-        <div class="logo-box" onclick="document.getElementById('logoInput').click()">
-          <span id="logoPlaceholder">Click for Logo</span>
-          <img id="logoImg">
+      <div class="brand-left">
+        <div>
+          <div class="logo-box" onclick="document.getElementById('logoInput').click()">
+            <span id="logoPlaceholder">Click for Logo</span>
+            <img id="logoImg">
+          </div>
+          <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewImage(event, 'logoImg', 'logoPlaceholder')">
         </div>
-        <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewImage(event, 'logoImg', 'logoPlaceholder')">
+        <div class="brand-left-info">
+          <div class="info-row">
+            <label style="width: 75px;">Company :</label>
+            <input type="text" id="compName" placeholder="Your Business Name" style="font-weight: bold; font-size: 13px;" oninput="calculate()">
+          </div>
+          <div class="info-row">
+            <label style="width: 75px;">Tagline :</label>
+            <input type="text" id="compTagline" placeholder="Deals in: Goods / Services">
+          </div>
+          <div class="info-row">
+            <label style="width: 75px;">Website :</label>
+            <input type="text" id="compWebsite" placeholder="www.yourcompany.com">
+          </div>
+        </div>
       </div>
 
-      <div class="company-meta">
-        <div class="info-row">
-          <label>Company :</label>
-          <input type="text" id="compName" placeholder="Business Name" oninput="calculate()">
-        </div>
-        <div class="info-row">
-          <label>Address :</label>
-          <input type="text" id="compAddress" placeholder="Address, City, State - PIN">
-        </div>
+      <div class="brand-right">
         <div class="info-row">
           <label>Mobile No :</label>
           <input type="text" id="compPhone" placeholder="+91 9876543210">
@@ -317,6 +338,10 @@
         <div class="info-row">
           <label>GSTIN :</label>
           <input type="text" id="compGst" placeholder="07AAAAA0000A1Z5" oninput="calculate()">
+        </div>
+        <div class="info-row">
+          <label>Address :</label>
+          <input type="text" id="compAddress" placeholder="Address, City, State - PIN">
         </div>
       </div>
     </div>
@@ -478,8 +503,9 @@
 
     <!-- Footer: Bank, QR & Signature -->
     <div class="footer-grid">
-      <div class="footer-box">
-        <h5>Bank & UPI Details</h5>
+      <!-- Bank Details (Hidden on QT / PO) -->
+      <div class="footer-box" id="bankDetailsBox">
+        <h5>Bank Details</h5>
         <div class="info-row">
           <label style="width:75px;">Bank :</label>
           <input type="text" id="bankName" placeholder="Bank Name">
@@ -498,13 +524,14 @@
         </div>
       </div>
 
-      <div class="qr-card">
+      <!-- Scan QR (Hidden on QT / PO) -->
+      <div class="qr-card" id="qrCardBox">
         <h5>Scan to Pay</h5>
         <div id="qrcode"></div>
         <span>UPI Exact Amount</span>
       </div>
 
-      <div class="footer-box">
+      <div class="footer-box" id="termsBox">
         <h5>Terms & Conditions</h5>
         <textarea id="termsText" rows="4" placeholder="1. Payment within stipulated time.&#10;2. Subject to local jurisdiction."></textarea>
       </div>
@@ -616,11 +643,12 @@
       calculate();
     }
 
-    /* ====== Dynamic DocType Switch (Hides GST & Shipped on Quotation) ====== */
+    /* ====== Dynamic DocType Switch (Hides Bank, QR, GST & Shipped on QT/PO) ====== */
     function handleDocTypeChange() {
       const docType = document.getElementById('docType').value;
       const category = document.getElementById('billCategory').value;
       const isQuotation = docType === 'QT';
+      const isPO = docType === 'PO';
 
       const title = document.getElementById('docTitle');
       const partyHeading = document.getElementById('partyHeading');
@@ -632,11 +660,21 @@
       const secondPartyCol = document.getElementById('secondPartyCol');
       const supplyTypeBox = document.getElementById('supplyTypeContainer');
       const subtotalLabel = document.getElementById('subtotalLabel');
+      const bankDetailsBox = document.getElementById('bankDetailsBox');
+      const qrCardBox = document.getElementById('qrCardBox');
 
       const year = new Date().getFullYear();
       let cnt = parseInt(localStorage.getItem(`cnt_${docType}_${year}`)) || 1;
 
-      // Visibility based on Quotation vs Tax Invoice
+      // Hide/Show Bank & QR Details on Quotation and Purchase Order
+      if (isQuotation || isPO) {
+        bankDetailsBox.style.display = 'none';
+        qrCardBox.style.display = 'none';
+      } else {
+        bankDetailsBox.style.display = 'block';
+        qrCardBox.style.display = 'flex';
+      }
+
       if (isQuotation) {
         title.innerText = 'QUOTATION / ESTIMATE';
         partyHeading.innerText = 'Quoted To (Client)';
@@ -646,7 +684,7 @@
         lblDocDate.innerText = 'Quote Date :';
         document.getElementById('invoiceNumber').value = `QT-${year}-${String(cnt).padStart(3, '0')}`;
 
-        // Hide Shipped Addr, GST Column & Supply Type
+        // Hide Shipped Addr, GST Column & Supply Type on Quotation
         secondPartyCol.style.display = 'none';
         supplyTypeBox.style.display = 'none';
         document.querySelectorAll('.col-gst').forEach(el => el.style.display = 'none');
@@ -664,7 +702,7 @@
         supplyTypeBox.style.display = 'block';
         document.querySelectorAll('.col-gst').forEach(el => el.style.display = '');
         subtotalLabel.innerText = 'Taxable Subtotal:';
-      } else if (docType === 'PO') {
+      } else if (isPO) {
         title.innerText = 'PURCHASE ORDER';
         partyHeading.innerText = 'Vendor (Supplier)';
         lblPartyName.innerText = 'Name :';
@@ -811,6 +849,8 @@
     function saveCompanyProfile() {
       const comp = {
         name: document.getElementById('compName').value,
+        tagline: document.getElementById('compTagline').value,
+        website: document.getElementById('compWebsite').value,
         addr: document.getElementById('compAddress').value,
         phone: document.getElementById('compPhone').value,
         email: document.getElementById('compEmail').value,
@@ -831,6 +871,8 @@
       if (!data) return;
       const comp = JSON.parse(data);
       if (comp.name) document.getElementById('compName').value = comp.name;
+      if (comp.tagline) document.getElementById('compTagline').value = comp.tagline;
+      if (comp.website) document.getElementById('compWebsite').value = comp.website;
       if (comp.addr) document.getElementById('compAddress').value = comp.addr;
       if (comp.phone) document.getElementById('compPhone').value = comp.phone;
       if (comp.email) document.getElementById('compEmail').value = comp.email;
