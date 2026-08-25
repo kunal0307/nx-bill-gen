@@ -75,22 +75,22 @@
         <div class="brand-left">
           <div>
             <div class="logo-box" onclick="document.getElementById('logoInput').click()">
-              <span id="logoPlaceholder">Click for Logo</span>
+              <span id="logoPlaceholder">Upload Logo</span>
               <img id="logoImg" alt="Company Logo">
             </div>
             <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewAndAutoSaveImage(event, 'logoImg', 'logoPlaceholder', 'saved_logo_img')">
           </div>
           <div class="brand-left-info">
             <div class="info-row">
-              <label class="lbl-short">Company :</label>
+              <label class="lbl-company">Company :</label>
               <input type="text" id="compName" placeholder="Nextro Energy Enterprises" value="Nextro Energy Enterprises" class="comp-title-input" oninput="calculate()">
             </div>
             <div class="info-row">
-              <label class="lbl-short">Tagline :</label>
+              <label class="lbl-company">Tagline :</label>
               <input type="text" id="compTagline" placeholder="Solar & Power Solutions">
             </div>
             <div class="info-row">
-              <label class="lbl-short">Website :</label>
+              <label class="lbl-company">Website :</label>
               <input type="text" id="compWebsite" placeholder="www.nextroenergy.com">
             </div>
           </div>
@@ -99,7 +99,7 @@
         <!-- Right: Mobile, Email & GSTIN -->
         <div class="brand-right">
           <div class="info-row">
-            <label>Mobile No :</label>
+            <label>Mobile Number :</label>
             <input type="text" id="compPhone" placeholder="+919716588121" value="+919716588121">
           </div>
           <div class="info-row">
@@ -116,7 +116,7 @@
       <!-- Full-Width Address Row -->
       <div class="brand-full-address">
         <div class="info-row">
-          <label class="lbl-short">Address :</label>
+          <label class="lbl-company">Address :</label>
           <input type="text" id="compAddress" placeholder="Full Registered Business Address, Plot/Office No, City, State - PIN">
         </div>
       </div>
@@ -133,7 +133,7 @@
           </select>
         </div>
         <div class="info-row">
-          <label>Doc Type :</label>
+          <label>Document Type :</label>
           <select id="docType" onchange="handleDocTypeChange()">
             <option value="INV" selected>Tax Invoice</option>
             <option value="QT">Quotation / Estimate</option>
@@ -146,7 +146,7 @@
       <div class="meta-right">
         <h2 id="docTitle">TAX INVOICE</h2>
         <div class="info-row">
-          <label id="lblDocNo">Invoice No :</label>
+          <label id="lblDocNo">Invoice Number :</label>
           <input type="text" id="invoiceNumber">
         </div>
         <div class="info-row">
@@ -168,7 +168,7 @@
           <datalist id="clientList"></datalist>
         </div>
         <div class="info-row">
-          <label>Mobile No :</label>
+          <label>Mobile Number :</label>
           <input type="text" id="partyMobile" placeholder="Contact Number">
         </div>
         <div class="info-row">
@@ -184,8 +184,8 @@
           <input type="text" id="partyStateCode" placeholder="e.g. 07 - Delhi" oninput="calculate()">
         </div>
         <div class="info-row align-start mt-6">
-          <label id="lblPartyAddress">Billing Addr :</label>
-          <textarea id="partyAddress" rows="3" placeholder="Full Address with PIN" oninput="syncAddresses()"></textarea>
+          <label id="lblPartyAddress">Billing Address :</label>
+          <textarea id="partyAddress" rows="3" placeholder="Full Billing Address with PIN" oninput="syncAddresses()"></textarea>
         </div>
       </div>
 
@@ -199,15 +199,15 @@
         </div>
         
         <div class="info-row">
-          <label id="lblSecondName">Ship Name :</label>
+          <label id="lblSecondName">Shipping Name :</label>
           <input type="text" id="secondName" placeholder="Delivery / Consignee Name">
         </div>
         <div class="info-row">
-          <label id="lblSecondGst">Ship GSTIN :</label>
+          <label id="lblSecondGst">Shipping GSTIN :</label>
           <input type="text" id="secondGst" placeholder="Shipment / Site GSTIN (Optional)">
         </div>
         <div class="info-row align-start">
-          <label id="lblSecondAddress">Ship Addr :</label>
+          <label id="lblSecondAddress">Shipping Address :</label>
           <textarea id="secondAddress" rows="4" placeholder="Full Delivery Address with State & PIN"></textarea>
         </div>
       </div>
@@ -304,15 +304,15 @@
       <div class="footer-box" id="bankDetailsBox">
         <h5>Bank Details</h5>
         <div class="info-row">
-          <label class="lbl-bank">Bank :</label>
+          <label class="lbl-bank">Bank Name :</label>
           <input type="text" id="bankName" placeholder="Bank Name">
         </div>
         <div class="info-row">
-          <label class="lbl-bank">A/C No :</label>
+          <label class="lbl-bank">Account Number :</label>
           <input type="text" id="accNo" placeholder="Account Number">
         </div>
         <div class="info-row">
-          <label class="lbl-bank">IFSC :</label>
+          <label class="lbl-bank">IFSC Code :</label>
           <input type="text" id="ifscCode" placeholder="IFSC Code">
         </div>
         <div class="info-row">

@@ -68,7 +68,7 @@ function handleCategoryChange() {
   document.getElementById('thDesc').innerText = isService ? 'Service Description' : 'Item / Product Name';
   document.getElementById('thCode').innerText = isService ? 'SAC Code' : 'HSN Code';
   document.getElementById('thRate').innerText = isService ? 'Rate / Fee (₹)' : 'Rate (₹)';
-  document.getElementById('lblPartyAddress').innerText = isService ? 'Address :' : 'Billing Addr :';
+  document.getElementById('lblPartyAddress').innerText = isService ? 'Address :' : 'Billing Address :';
 
   const secondPartyHeading = document.getElementById('secondPartyHeading');
   const lblSecondName = document.getElementById('lblSecondName');
@@ -77,17 +77,17 @@ function handleCategoryChange() {
 
   if (isService) {
     secondPartyHeading.innerText = 'Service / Site Details';
-    lblSecondName.innerText = 'Site/Proj :';
+    lblSecondName.innerText = 'Site / Project Name :';
     lblSecondGst.innerText = 'Site GSTIN :';
-    lblSecondAddress.innerText = 'Site Addr :';
+    lblSecondAddress.innerText = 'Site Address :';
     document.getElementById('secondName').placeholder = 'Client Site / Project Name';
     document.getElementById('secondGst').placeholder = 'Site / Branch GSTIN (Optional)';
     document.getElementById('secondAddress').placeholder = 'Service Location / Site Address';
   } else {
     secondPartyHeading.innerText = 'Shipped To (Delivery)';
-    lblSecondName.innerText = 'Ship Name :';
-    lblSecondGst.innerText = 'Ship GSTIN :';
-    lblSecondAddress.innerText = 'Ship Addr :';
+    lblSecondName.innerText = 'Shipping Name :';
+    lblSecondGst.innerText = 'Shipping GSTIN :';
+    lblSecondAddress.innerText = 'Shipping Address :';
     document.getElementById('secondName').placeholder = 'Delivery / Consignee Name';
     document.getElementById('secondGst').placeholder = 'Shipment GSTIN (Optional)';
     document.getElementById('secondAddress').placeholder = 'Full Delivery Address with State & PIN';
@@ -135,7 +135,7 @@ function handleDocTypeChange() {
     partyHeading.innerText = 'Quoted To (Client)';
     lblPartyName.innerText = 'Name :';
     lblPartyGst.innerText = 'GSTIN :';
-    lblDocNo.innerText = 'Quote Ref :';
+    lblDocNo.innerText = 'Quote Reference :';
     lblDocDate.innerText = 'Quote Date :';
     document.getElementById('invoiceNumber').value = `QT-${year}-${String(cnt).padStart(3, '0')}`;
 
@@ -148,7 +148,7 @@ function handleDocTypeChange() {
     partyHeading.innerText = category === 'SERVICE' ? 'Billed To (Client)' : 'Billed To (Buyer)';
     lblPartyName.innerText = 'Name :';
     lblPartyGst.innerText = 'GSTIN :';
-    lblDocNo.innerText = 'Invoice No :';
+    lblDocNo.innerText = 'Invoice Number :';
     lblDocDate.innerText = 'Invoice Date :';
     document.getElementById('invoiceNumber').value = `INV-${year}-${String(cnt).padStart(3, '0')}`;
 
