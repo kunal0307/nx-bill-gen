@@ -155,13 +155,24 @@
       margin-bottom: 15px;
       gap: 15px;
     }
-    .words-box {
+    .left-calc-pane {
       width: 48%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .words-box {
       font-size: 12px;
       background: #f8fafc;
       padding: 10px;
       border-radius: 4px;
       border-left: 3px solid #2563eb;
+    }
+    .supply-type-box {
+      background: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
     }
     .totals-table { width: 48%; min-width: unset; }
     .totals-table td { border: none; padding: 3px 0; font-size: 12px; }
@@ -231,7 +242,7 @@
         flex-direction: column;
         align-items: stretch;
       }
-      .company-meta, .doc-meta-section > div, .words-box, .totals-table, .btn-group { width: 100% !important; }
+      .company-meta, .doc-meta-section > div, .left-calc-pane, .totals-table, .btn-group { width: 100% !important; }
       .logo-box { width: 100%; height: 70px; }
       #docTitle { text-align: left !important; margin-top: 10px; }
       .btn { flex: 1 1 calc(50% - 6px); justify-content: center; }
@@ -310,7 +321,7 @@
       </div>
     </div>
 
-    <!-- Document Meta & Relocated Supply Type -->
+    <!-- Document Meta Section -->
     <div class="doc-meta-section">
       <div style="width: 320px;">
         <div class="info-row">
@@ -326,13 +337,6 @@
             <option value="INV" selected>Tax Invoice</option>
             <option value="QT">Quotation / Estimate</option>
             <option value="PO">Purchase Order (PO)</option>
-          </select>
-        </div>
-        <div class="info-row">
-          <label>Supply Type :</label>
-          <select id="placeOfSupply" onchange="calculate()">
-            <option value="SAME" selected>Intra-State (CGST + SGST)</option>
-            <option value="OTHER">Inter-State (IGST)</option>
           </select>
         </div>
       </div>
@@ -351,9 +355,9 @@
     </div>
 
     <!-- Party Details Section -->
-    <div class="client-section">
+    <div class="client-section" id="clientSection">
       <!-- Billed To (Buyer / Client) -->
-      <div class="client-col">
+      <div class="client-col" id="billedCol">
         <h4 id="partyHeading">Billed To (Buyer)</h4>
         
         <div class="info-row">
@@ -375,12 +379,12 @@
         </div>
         <div class="info-row" style="align-items: flex-start; margin-top: 6px;">
           <label id="lblPartyAddress">Billing Addr :</label>
-          <textarea id="partyAddress" rows="3" placeholder="Full Billing Address with PIN" oninput="syncAddresses()"></textarea>
+          <textarea id="partyAddress" rows="3" placeholder="Full Address with PIN" oninput="syncAddresses()"></textarea>
         </div>
       </div>
 
-      <!-- Shipped To OR Service Details (Dynamic) -->
-      <div class="client-col">
+      <!-- Shipped To OR Service Details (Hidden on Quotation) -->
+      <div class="client-col" id="secondPartyCol">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
           <h4 id="secondPartyHeading">Shipped To (Delivery)</h4>
           <label id="sameAsBillingLabel" style="font-size: 10px; cursor: pointer; color: #2563eb; font-weight: bold;">
@@ -403,18 +407,18 @@
       </div>
     </div>
 
-    <!-- Responsive Items Table with Sr No (#) -->
+    <!-- Responsive Items Table -->
     <div class="table-wrapper">
       <table id="billTable">
         <thead>
           <tr>
             <th style="width: 5%;" class="text-center">#</th>
-            <th style="width: 32%;" id="thDesc">Item / Product Name</th>
-            <th style="width: 13%;" id="thCode">HSN Code</th>
-            <th style="width: 8%;" class="text-center col-qty">Qty</th>
-            <th style="width: 10%;" class="text-center col-unit">Unit</th>
+            <th style="width: 34%;" id="thDesc">Item / Product Name</th>
+            <th style="width: 14%;" id="thCode">HSN Code</th>
+            <th style="width: 9%;" class="text-center col-qty">Qty</th>
+            <th style="width: 11%;" class="text-center col-unit">Unit</th>
             <th style="width: 14%;" class="text-right" id="thRate">Rate (₹)</th>
-            <th style="width: 10%;" class="text-center">GST %</th>
+            <th style="width: 10%;" class="text-center col-gst">GST %</th>
             <th style="width: 14%;" class="text-right">Total (₹)</th>
             <th style="width: 4%;" class="text-center action-col" data-html2canvas-ignore="true"></th>
           </tr>
@@ -426,14 +430,27 @@
 
     <!-- Calculation Summary & Words -->
     <div class="calculation-grid">
-      <div class="words-box">
-        <strong>Amount in Words:</strong><br>
-        <span id="amountWords">Zero Rupees Only</span>
+      <div class="left-calc-pane">
+        <div class="words-box">
+          <strong>Amount in Words:</strong><br>
+          <span id="amountWords">Zero Rupees Only</span>
+        </div>
+
+        <!-- Supply Type Relocated below Amount in Words -->
+        <div class="supply-type-box" id="supplyTypeContainer">
+          <div class="info-row" style="margin-bottom: 0;">
+            <label style="width: 95px;">Supply Type :</label>
+            <select id="placeOfSupply" onchange="calculate()">
+              <option value="SAME" selected>Intra-State (CGST + SGST)</option>
+              <option value="OTHER">Inter-State (IGST)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <table class="totals-table">
-        <tr>
-          <td>Taxable Subtotal:</td>
+        <tr id="subtotalRow">
+          <td id="subtotalLabel">Taxable Subtotal:</td>
           <td class="text-right" id="subTotal">₹0.00</td>
         </tr>
         <tr id="cgstRow">
@@ -448,7 +465,7 @@
           <td>Integrated Tax (IGST):</td>
           <td class="text-right" id="igstAmount">₹0.00</td>
         </tr>
-        <tr>
+        <tr id="roundOffRow">
           <td>Round Off:</td>
           <td class="text-right" id="roundOffVal">₹0.00</td>
         </tr>
@@ -552,7 +569,7 @@
     document.getElementById('partyName').addEventListener('input', syncAddresses);
     document.getElementById('partyGst').addEventListener('input', syncAddresses);
 
-    /* ====== Update Sr No (#) on all rows ====== */
+    /* ====== Update Sr No (#) ====== */
     function updateRowIndices() {
       document.querySelectorAll('#billBody tr').forEach((row, index) => {
         const srSpan = row.querySelector('.sr-no');
@@ -595,32 +612,32 @@
         document.getElementById('secondAddress').placeholder = 'Full Delivery Address with State & PIN';
       }
 
+      handleDocTypeChange();
       calculate();
     }
 
-    /* ====== Dynamic Role & DocType Handler ====== */
+    /* ====== Dynamic DocType Switch (Hides GST & Shipped on Quotation) ====== */
     function handleDocTypeChange() {
       const docType = document.getElementById('docType').value;
       const category = document.getElementById('billCategory').value;
+      const isQuotation = docType === 'QT';
+
       const title = document.getElementById('docTitle');
       const partyHeading = document.getElementById('partyHeading');
       const lblPartyName = document.getElementById('lblPartyName');
       const lblPartyGst = document.getElementById('lblPartyGst');
       const lblDocNo = document.getElementById('lblDocNo');
       const lblDocDate = document.getElementById('lblDocDate');
+      
+      const secondPartyCol = document.getElementById('secondPartyCol');
+      const supplyTypeBox = document.getElementById('supplyTypeContainer');
+      const subtotalLabel = document.getElementById('subtotalLabel');
 
       const year = new Date().getFullYear();
       let cnt = parseInt(localStorage.getItem(`cnt_${docType}_${year}`)) || 1;
 
-      if (docType === 'INV') {
-        title.innerText = 'TAX INVOICE';
-        partyHeading.innerText = category === 'SERVICE' ? 'Billed To (Client)' : 'Billed To (Buyer)';
-        lblPartyName.innerText = 'Name :';
-        lblPartyGst.innerText = 'GSTIN :';
-        lblDocNo.innerText = 'Invoice No :';
-        lblDocDate.innerText = 'Invoice Date :';
-        document.getElementById('invoiceNumber').value = `INV-${year}-${String(cnt).padStart(3, '0')}`;
-      } else if (docType === 'QT') {
+      // Visibility based on Quotation vs Tax Invoice
+      if (isQuotation) {
         title.innerText = 'QUOTATION / ESTIMATE';
         partyHeading.innerText = 'Quoted To (Client)';
         lblPartyName.innerText = 'Name :';
@@ -628,6 +645,25 @@
         lblDocNo.innerText = 'Quote Ref :';
         lblDocDate.innerText = 'Quote Date :';
         document.getElementById('invoiceNumber').value = `QT-${year}-${String(cnt).padStart(3, '0')}`;
+
+        // Hide Shipped Addr, GST Column & Supply Type
+        secondPartyCol.style.display = 'none';
+        supplyTypeBox.style.display = 'none';
+        document.querySelectorAll('.col-gst').forEach(el => el.style.display = 'none');
+        subtotalLabel.innerText = 'Subtotal:';
+      } else if (docType === 'INV') {
+        title.innerText = 'TAX INVOICE';
+        partyHeading.innerText = category === 'SERVICE' ? 'Billed To (Client)' : 'Billed To (Buyer)';
+        lblPartyName.innerText = 'Name :';
+        lblPartyGst.innerText = 'GSTIN :';
+        lblDocNo.innerText = 'Invoice No :';
+        lblDocDate.innerText = 'Invoice Date :';
+        document.getElementById('invoiceNumber').value = `INV-${year}-${String(cnt).padStart(3, '0')}`;
+
+        secondPartyCol.style.display = 'block';
+        supplyTypeBox.style.display = 'block';
+        document.querySelectorAll('.col-gst').forEach(el => el.style.display = '');
+        subtotalLabel.innerText = 'Taxable Subtotal:';
       } else if (docType === 'PO') {
         title.innerText = 'PURCHASE ORDER';
         partyHeading.innerText = 'Vendor (Supplier)';
@@ -636,7 +672,14 @@
         lblDocNo.innerText = 'PO Number :';
         lblDocDate.innerText = 'PO Date :';
         document.getElementById('invoiceNumber').value = `PO-${year}-${String(cnt).padStart(3, '0')}`;
+
+        secondPartyCol.style.display = 'block';
+        supplyTypeBox.style.display = 'block';
+        document.querySelectorAll('.col-gst').forEach(el => el.style.display = '');
+        subtotalLabel.innerText = 'Taxable Subtotal:';
       }
+
+      calculate();
     }
 
     function numToWords(num) {
@@ -666,12 +709,13 @@
       let subtotal = 0;
       let isInterState = document.getElementById('placeOfSupply').value === 'OTHER';
       let isService = document.getElementById('billCategory').value === 'SERVICE';
+      let isQuotation = document.getElementById('docType').value === 'QT';
       let totalTax = 0;
 
       document.querySelectorAll('#billBody tr').forEach(row => {
         const qty = isService ? 1 : (parseFloat(row.querySelector('.item-qty').value) || 0);
         const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
-        const gstRate = parseFloat(row.querySelector('.item-gst').value) || 0;
+        const gstRate = isQuotation ? 0 : (parseFloat(row.querySelector('.item-gst').value) || 0);
 
         const taxable = qty * rate;
         const taxAmount = (taxable * gstRate) / 100;
@@ -682,21 +726,29 @@
         totalTax += taxAmount;
       });
 
-      if (isInterState) {
+      if (isQuotation) {
         document.getElementById('cgstRow').style.display = 'none';
         document.getElementById('sgstRow').style.display = 'none';
-        document.getElementById('igstRow').style.display = 'table-row';
-        document.getElementById('igstAmount').innerText = `₹${totalTax.toFixed(2)}`;
-      } else {
-        document.getElementById('cgstRow').style.display = 'table-row';
-        document.getElementById('sgstRow').style.display = 'table-row';
         document.getElementById('igstRow').style.display = 'none';
-        document.getElementById('cgstAmount').innerText = `₹${(totalTax / 2).toFixed(2)}`;
-        document.getElementById('sgstAmount').innerText = `₹${(totalTax / 2).toFixed(2)}`;
+        document.getElementById('roundOffRow').style.display = 'none';
+      } else {
+        document.getElementById('roundOffRow').style.display = 'table-row';
+        if (isInterState) {
+          document.getElementById('cgstRow').style.display = 'none';
+          document.getElementById('sgstRow').style.display = 'none';
+          document.getElementById('igstRow').style.display = 'table-row';
+          document.getElementById('igstAmount').innerText = `₹${totalTax.toFixed(2)}`;
+        } else {
+          document.getElementById('cgstRow').style.display = 'table-row';
+          document.getElementById('sgstRow').style.display = 'table-row';
+          document.getElementById('igstRow').style.display = 'none';
+          document.getElementById('cgstAmount').innerText = `₹${(totalTax / 2).toFixed(2)}`;
+          document.getElementById('sgstAmount').innerText = `₹${(totalTax / 2).toFixed(2)}`;
+        }
       }
 
       const rawTotal = subtotal + totalTax;
-      const rounded = Math.round(rawTotal);
+      const rounded = isQuotation ? rawTotal : Math.round(rawTotal);
       const roundOff = rounded - rawTotal;
 
       currentGrandTotal = rounded;
@@ -710,6 +762,7 @@
 
     function addRow(desc='', code='', qty=1, unit='Nos', rate=0, gst='18') {
       const isService = document.getElementById('billCategory').value === 'SERVICE';
+      const isQuotation = document.getElementById('docType').value === 'QT';
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="text-center font-weight-bold"><span class="sr-no"></span></td>
@@ -730,7 +783,7 @@
           </select>
         </td>
         <td><input type="number" class="text-right item-rate" value="${rate}" min="0" oninput="calculate()"></td>
-        <td>
+        <td class="col-gst" style="${isQuotation ? 'display:none;' : ''}">
           <select class="item-gst" onchange="calculate()" style="font-size:11px;">
             <option value="0" ${gst==='0'?'selected':''}>0%</option>
             <option value="5" ${gst==='5'?'selected':''}>5%</option>
@@ -862,7 +915,7 @@
           qty: r.querySelector('.item-qty') ? r.querySelector('.item-qty').value : 1,
           unit: r.querySelector('.item-unit') ? r.querySelector('.item-unit').value : 'Nos',
           rate: r.querySelector('.item-rate').value,
-          gst: r.querySelector('.item-gst').value
+          gst: r.querySelector('.item-gst') ? r.querySelector('.item-gst').value : '0'
         });
       });
 
@@ -971,7 +1024,6 @@
       document.getElementById('billCategory').value = inv.category || 'SALES';
       document.getElementById('docType').value = inv.docType;
       handleCategoryChange();
-      handleDocTypeChange();
       document.getElementById('invoiceNumber').value = inv.id;
       document.getElementById('docDate').value = inv.docDate;
       
