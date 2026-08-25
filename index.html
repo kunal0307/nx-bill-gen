@@ -3,9 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Billing & Invoicing Suite</title>
+  <title>Nextro Energy - Invoicing Suite</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Google Fonts for Dynamic Font Switching -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
     body { background-color: #f1f5f9; padding: 10px; color: #1e293b; }
@@ -21,6 +25,14 @@
       position: relative;
     }
 
+    /* Text Transformation Classes */
+    .case-uppercase, .case-uppercase input, .case-uppercase textarea, .case-uppercase select, .case-uppercase span, .case-uppercase td, .case-uppercase th, .case-uppercase h1, .case-uppercase h2, .case-uppercase h4, .case-uppercase h5 {
+      text-transform: uppercase !important;
+    }
+    .case-capitalize, .case-capitalize input, .case-capitalize textarea, .case-capitalize select, .case-capitalize span, .case-capitalize td, .case-capitalize th, .case-capitalize h1, .case-capitalize h2, .case-capitalize h4, .case-capitalize h5 {
+      text-transform: capitalize !important;
+    }
+
     /* Action Toolbar */
     .action-toolbar {
       display: flex;
@@ -33,9 +45,9 @@
       border-radius: 8px;
       margin-bottom: 20px;
     }
-    .btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .btn {
-      padding: 8px 12px;
+      padding: 7px 11px;
       font-size: 12px;
       font-weight: 600;
       border-radius: 4px;
@@ -54,6 +66,16 @@
     .btn-amber { background: #d97706; color: white; }
     .btn:hover { opacity: 0.9; }
 
+    .control-select {
+      padding: 6px 8px;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #ffffff;
+      outline: none;
+    }
+
     /* Header & Branding */
     .brand-section {
       display: flex;
@@ -69,9 +91,10 @@
       flex: 1.1;
       min-width: 0;
     }
+    /* Logo increased by 5px (125px x 80px) */
     .logo-box {
-      width: 120px;
-      min-height: 75px;
+      width: 125px;
+      min-height: 80px;
       border: 1px dashed #cbd5e1;
       display: flex;
       align-items: center;
@@ -83,7 +106,7 @@
       background: #fafafa;
       flex-shrink: 0;
     }
-    .logo-box img { max-width: 100%; max-height: 70px; object-fit: contain; }
+    .logo-box img { max-width: 100%; max-height: 75px; object-fit: contain; }
     .brand-left-info { flex: 1; min-width: 0; }
     .brand-right { flex: 1; min-width: 0; }
     
@@ -208,8 +231,11 @@
       background: #f8fafc;
     }
     .qr-card span { font-size: 10px; font-weight: 600; margin-top: 4px; text-align: center; }
+    
+    /* Enlarged Sign & Stamp Box */
     .sign-box {
-      flex: 1;
+      flex: 1.2;
+      min-height: 115px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -220,7 +246,7 @@
       padding: 8px;
       background: #fafafa;
     }
-    .sign-preview { max-height: 45px; max-width: 110px; display: none; margin-bottom: 3px; }
+    .sign-preview { max-height: 85px; max-width: 150px; object-fit: contain; display: none; margin-bottom: 4px; }
 
     /* Modal */
     .modal {
@@ -252,7 +278,7 @@
         align-items: stretch;
       }
       .brand-left, .brand-right, .doc-meta-section > div, .left-calc-pane, .totals-table, .btn-group { width: 100% !important; }
-      .logo-box { width: 100%; height: 70px; }
+      .logo-box { width: 100%; height: 75px; }
       #docTitle { text-align: left !important; margin-top: 10px; }
       .btn { flex: 1 1 calc(50% - 6px); justify-content: center; }
     }
@@ -272,7 +298,7 @@
       table { min-width: 100% !important; }
       .brand-section, .doc-meta-section, .client-section, .calculation-grid, .footer-grid { flex-direction: row !important; }
       .company-meta { width: 400px !important; }
-      .logo-box { border: none; width: 120px; }
+      .logo-box { border: none; width: 125px; }
       #sameAsBillingLabel { display: none !important; }
     }
   </style>
@@ -291,7 +317,23 @@
         <button class="btn btn-whatsapp" onclick="shareWhatsApp()">📱 WhatsApp</button>
         <button class="btn btn-email" onclick="shareEmail()">✉️ Email</button>
       </div>
+
+      <!-- Text Case, Font & Print Controls -->
       <div class="btn-group" style="margin-top: 4px;">
+        <select id="fontFamilySelector" class="control-select" onchange="changeFontFamily(this.value)" title="Choose Font Style">
+          <option value="'Segoe UI', Arial, sans-serif" selected>Segoe UI</option>
+          <option value="'Roboto', sans-serif">Roboto</option>
+          <option value="'Poppins', sans-serif">Poppins</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+        </select>
+
+        <select id="textCaseSelector" class="control-select" onchange="changeTextCase(this.value)" title="Change Text Case">
+          <option value="normal" selected>Normal Case</option>
+          <option value="uppercase">ALL CAPITAL</option>
+          <option value="capitalize">Each Word Capital</option>
+        </select>
+
         <button class="btn btn-success" onclick="downloadDirectPDF()">📥 PDF</button>
         <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
       </div>
@@ -310,15 +352,15 @@
         <div class="brand-left-info">
           <div class="info-row">
             <label style="width: 75px;">Company :</label>
-            <input type="text" id="compName" placeholder="Your Business Name" style="font-weight: bold; font-size: 13px;" oninput="calculate()">
+            <input type="text" id="compName" placeholder="Nextro Energy Enterprises" value="Nextro Energy Enterprises" style="font-weight: bold; font-size: 13px;" oninput="calculate()">
           </div>
           <div class="info-row">
             <label style="width: 75px;">Tagline :</label>
-            <input type="text" id="compTagline" placeholder="Deals in: Goods / Services">
+            <input type="text" id="compTagline" placeholder="Solar & Power Solutions">
           </div>
           <div class="info-row">
             <label style="width: 75px;">Website :</label>
-            <input type="text" id="compWebsite" placeholder="www.yourcompany.com">
+            <input type="text" id="compWebsite" placeholder="www.nextroenergy.com">
           </div>
         </div>
       </div>
@@ -326,11 +368,11 @@
       <div class="brand-right">
         <div class="info-row">
           <label>Mobile No :</label>
-          <input type="text" id="compPhone" placeholder="+91 9876543210">
+          <input type="text" id="compPhone" placeholder="+919716588121" value="+919716588121">
         </div>
         <div class="info-row">
           <label>Email ID :</label>
-          <input type="email" id="compEmail" placeholder="contact@yourcompany.com">
+          <input type="email" id="compEmail" placeholder="nextroenergyenterprises@gmail.com" value="nextroenergyenterprises@gmail.com">
         </div>
         <div class="info-row">
           <label>GSTIN :</label>
@@ -338,7 +380,7 @@
         </div>
         <div class="info-row">
           <label>Address :</label>
-          <input type="text" id="compAddress" placeholder="Address, City, State - PIN">
+          <input type="text" id="compAddress" placeholder="Head Office, City, State - PIN">
         </div>
       </div>
     </div>
@@ -503,7 +545,7 @@
       </table>
     </div>
 
-    <!-- Footer: Bank, QR & Signature -->
+    <!-- Footer: Bank, QR & Enlarged Signature Box -->
     <div class="footer-grid">
       <!-- Bank Details (Hidden on Quotation) -->
       <div class="footer-box" id="bankDetailsBox">
@@ -538,9 +580,10 @@
         <textarea id="termsText" rows="4" placeholder="1. Payment within stipulated time.&#10;2. Subject to local jurisdiction."></textarea>
       </div>
 
+      <!-- Enlarged Sign & Stamp Box -->
       <div class="sign-box" onclick="document.getElementById('signInput').click()">
         <img id="signImg" class="sign-preview">
-        <span id="signPlaceholder" style="font-size: 10px; color:#64748b; cursor:pointer;" data-html2canvas-ignore="true">Upload Sign/Seal</span>
+        <span id="signPlaceholder" style="font-size: 11px; color:#64748b; cursor:pointer; padding: 15px 0;" data-html2canvas-ignore="true">Click to Upload Signature & Stamp</span>
         <input type="file" id="signInput" accept="image/*" style="display:none" onchange="previewImage(event, 'signImg', 'signPlaceholder')">
         <span style="font-size:11px; font-weight:600; border-top:1px solid #94a3b8; width:100%; margin-top:4px;">Authorized Signatory</span>
       </div>
@@ -577,6 +620,9 @@
     let currentGrandTotal = 0;
     let qrInstance = null;
 
+    const DEFAULT_WHATSAPP = '+919716588121';
+    const DEFAULT_EMAIL = 'nextroenergyenterprises@gmail.com';
+
     const gstStateCodes = {
       "01": "Jammu & Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh",
       "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan",
@@ -585,6 +631,24 @@
     };
 
     document.getElementById('docDate').valueAsDate = new Date();
+
+    /* ====== Font Family & Text Case Switchers ====== */
+    function changeFontFamily(fontFamily) {
+      document.getElementById('invoiceArea').style.fontFamily = fontFamily;
+      document.querySelectorAll('#invoiceArea *').forEach(el => {
+        el.style.fontFamily = fontFamily;
+      });
+    }
+
+    function changeTextCase(caseType) {
+      const invoiceArea = document.getElementById('invoiceArea');
+      invoiceArea.classList.remove('case-uppercase', 'case-capitalize');
+      if (caseType === 'uppercase') {
+        invoiceArea.classList.add('case-uppercase');
+      } else if (caseType === 'capitalize') {
+        invoiceArea.classList.add('case-capitalize');
+      }
+    }
 
     /* ====== Sync Billed To & Second Address ====== */
     function syncAddresses() {
@@ -611,12 +675,10 @@
       const category = document.getElementById('billCategory').value;
       const isService = category === 'SERVICE';
 
-      // Table Header Switch
       document.getElementById('thDesc').innerText = isService ? 'Service Description' : 'Item / Product Name';
       document.getElementById('thCode').innerText = isService ? 'SAC Code' : 'HSN Code';
       document.getElementById('thRate').innerText = isService ? 'Rate / Fee (₹)' : 'Rate (₹)';
 
-      // Service mode me "Billing Addr" -> "Address :"
       document.getElementById('lblPartyAddress').innerText = isService ? 'Address :' : 'Billing Addr :';
 
       const secondPartyHeading = document.getElementById('secondPartyHeading');
@@ -668,7 +730,6 @@
       const year = new Date().getFullYear();
       let cnt = parseInt(localStorage.getItem(`cnt_${docType}_${year}`)) || 1;
 
-      // Show Bank & QR for all except Quotation
       if (isQuotation) {
         bankDetailsBox.style.display = 'none';
         qrCardBox.style.display = 'none';
@@ -940,7 +1001,7 @@
 
     function updateQRCode() {
       const upi = document.getElementById('upiId').value.trim();
-      const comp = document.getElementById('compName').value.trim() || 'Merchant';
+      const comp = document.getElementById('compName').value.trim() || 'Nextro Energy Enterprises';
       const container = document.getElementById('qrcode');
       container.innerHTML = '';
       if (!upi) return;
@@ -950,28 +1011,29 @@
     }
 
     function shareWhatsApp() {
-      const phone = document.getElementById('partyMobile').value.replace(/\D/g, '');
-      if (!phone) { alert('Please enter contact mobile number first.'); return; }
+      let clientPhone = document.getElementById('partyMobile').value.replace(/\D/g, '');
+      let targetPhone = clientPhone ? `91${clientPhone}` : DEFAULT_WHATSAPP.replace(/\D/g, '');
       
       const invoiceNo = document.getElementById('invoiceNumber').value;
       const grandTotal = document.getElementById('grandTotal').innerText;
-      const comp = document.getElementById('compName').value || 'Our Firm';
+      const comp = document.getElementById('compName').value || 'Nextro Energy Enterprises';
       
-      const text = `*Greeting from ${comp}*%0A%0AYour *${document.getElementById('docTitle').innerText}* is ready:%0A📄 *Doc No:* ${invoiceNo}%0A💰 *Grand Total:* ${grandTotal}%0A📅 *Date:* ${document.getElementById('docDate').value}%0A%0AThank you!`;
-      window.open(`https://wa.me/91${phone}?text=${text}`, '_blank');
+      const text = `*Greeting from ${comp}*%0A%0AYour *${document.getElementById('docTitle').innerText}* is ready:%0A📄 *Doc No:* ${invoiceNo}%0A💰 *Grand Total:* ${grandTotal}%0A📅 *Date:* ${document.getElementById('docDate').value}%0A%0AFor any queries, contact: ${DEFAULT_WHATSAPP}%0AThank you!`;
+      window.open(`https://wa.me/${targetPhone}?text=${text}`, '_blank');
     }
 
     function shareEmail() {
-      const email = document.getElementById('partyEmail').value.trim();
+      const clientEmail = document.getElementById('partyEmail').value.trim();
       const invoiceNo = document.getElementById('invoiceNumber').value;
       const docTitle = document.getElementById('docTitle').innerText;
-      const comp = document.getElementById('compName').value || 'Our Firm';
+      const comp = document.getElementById('compName').value || 'Nextro Energy Enterprises';
       const grandTotal = document.getElementById('grandTotal').innerText;
 
+      const toEmail = clientEmail || DEFAULT_EMAIL;
       const subject = encodeURIComponent(`${docTitle} - ${invoiceNo} from ${comp}`);
-      const body = encodeURIComponent(`Dear ${document.getElementById('partyName').value || 'Customer'},\n\nPlease find the details for your ${docTitle} below:\n\nDocument No: ${invoiceNo}\nDate: ${document.getElementById('docDate').value}\nTotal Amount: ${grandTotal}\n\nKindly process the necessary steps/payment.\n\nBest Regards,\n${comp}`);
+      const body = encodeURIComponent(`Dear ${document.getElementById('partyName').value || 'Customer'},\n\nPlease find the details for your ${docTitle} below:\n\nDocument No: ${invoiceNo}\nDate: ${document.getElementById('docDate').value}\nTotal Amount: ${grandTotal}\n\nFor any support, email us at ${DEFAULT_EMAIL} or call ${DEFAULT_WHATSAPP}.\n\nBest Regards,\n${comp}`);
 
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:${toEmail}?subject=${subject}&body=${body}`;
     }
 
     function saveCurrentInvoice() {
