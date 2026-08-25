@@ -6,10 +6,9 @@
   <title>Nextro Energy - Invoicing Suite</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <!-- Google Fonts for Dynamic Font Switching -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
     body { background-color: #f1f5f9; padding: 10px; color: #1e293b; }
@@ -36,14 +35,19 @@
     /* Action Toolbar */
     .action-toolbar {
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .toolbar-row {
+      display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
-      background: #e2e8f0;
-      padding: 10px 12px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      gap: 8px;
     }
     .btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .btn {
@@ -60,13 +64,14 @@
     }
     .btn-primary { background: #2563eb; color: white; }
     .btn-success { background: #16a34a; color: white; }
+    .btn-share { background: #8b5cf6; color: white; }
     .btn-whatsapp { background: #25d366; color: white; }
     .btn-email { background: #ea4335; color: white; }
     .btn-dark { background: #334155; color: white; }
     .btn-amber { background: #d97706; color: white; }
     .btn:hover { opacity: 0.9; }
 
-    .control-select {
+    .control-select, .share-input {
       padding: 6px 8px;
       border: 1px solid #94a3b8;
       border-radius: 4px;
@@ -74,6 +79,10 @@
       font-weight: 600;
       background: #ffffff;
       outline: none;
+    }
+    .share-input {
+      font-weight: normal;
+      width: 140px;
     }
 
     /* Header & Branding */
@@ -91,7 +100,6 @@
       flex: 1.1;
       min-width: 0;
     }
-    /* Logo increased by 5px (125px x 80px) */
     .logo-box {
       width: 125px;
       min-height: 80px;
@@ -232,7 +240,6 @@
     }
     .qr-card span { font-size: 10px; font-weight: 600; margin-top: 4px; text-align: center; }
     
-    /* Enlarged Sign & Stamp Box */
     .sign-box {
       flex: 1.2;
       min-height: 115px;
@@ -273,11 +280,12 @@
     @media (max-width: 768px) {
       body { padding: 4px; }
       .invoice-card { padding: 12px; }
-      .brand-section, .brand-left, .doc-meta-section, .client-section, .calculation-grid, .footer-grid, .action-toolbar {
+      .brand-section, .brand-left, .doc-meta-section, .client-section, .calculation-grid, .footer-grid, .toolbar-row {
         flex-direction: column;
         align-items: stretch;
       }
       .brand-left, .brand-right, .doc-meta-section > div, .left-calc-pane, .totals-table, .btn-group { width: 100% !important; }
+      .share-input { width: 100% !important; }
       .logo-box { width: 100%; height: 75px; }
       #docTitle { text-align: left !important; margin-top: 10px; }
       .btn { flex: 1 1 calc(50% - 6px); justify-content: center; }
@@ -309,33 +317,49 @@
     
     <!-- Action Toolbar (Non-printable) -->
     <div class="action-toolbar" data-html2canvas-ignore="true">
-      <div class="btn-group">
-        <button class="btn btn-dark" onclick="resetForm()">+ New</button>
-        <button class="btn btn-primary" onclick="saveCurrentInvoice()">💾 Save</button>
-        <button class="btn btn-amber" onclick="saveCompanyProfile()">🏢 Company</button>
-        <button class="btn btn-dark" onclick="openHistoryModal()">📂 History (<span id="historyCount">0</span>)</button>
-        <button class="btn btn-whatsapp" onclick="shareWhatsApp()">📱 WhatsApp</button>
-        <button class="btn btn-email" onclick="shareEmail()">✉️ Email</button>
+      <!-- Row 1: Document Actions & Save -->
+      <div class="toolbar-row">
+        <div class="btn-group">
+          <button class="btn btn-dark" onclick="resetForm()">+ New</button>
+          <button class="btn btn-primary" onclick="saveCurrentInvoice()">💾 Save</button>
+          <button class="btn btn-amber" onclick="saveCompanyProfile()">🏢 Company</button>
+          <button class="btn btn-dark" onclick="openHistoryModal()">📂 History (<span id="historyCount">0</span>)</button>
+        </div>
+
+        <div class="btn-group">
+          <select id="fontFamilySelector" class="control-select" onchange="changeFontFamily(this.value)" title="Choose Font Style">
+            <option value="'Segoe UI', Arial, sans-serif" selected>Segoe UI</option>
+            <option value="'Courier Prime', 'Courier New', monospace">Courier (Typewriter)</option>
+            <option value="'Roboto', sans-serif">Roboto</option>
+            <option value="'Poppins', sans-serif">Poppins</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+          </select>
+
+          <select id="textCaseSelector" class="control-select" onchange="changeTextCase(this.value)" title="Change Text Case">
+            <option value="normal" selected>Normal Case</option>
+            <option value="uppercase">ALL CAPITAL</option>
+            <option value="capitalize">Each Word Capital</option>
+          </select>
+
+          <button class="btn btn-success" onclick="downloadDirectPDF()">📥 PDF</button>
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+        </div>
       </div>
 
-      <!-- Text Case, Font & Print Controls -->
-      <div class="btn-group" style="margin-top: 4px;">
-        <select id="fontFamilySelector" class="control-select" onchange="changeFontFamily(this.value)" title="Choose Font Style">
-          <option value="'Segoe UI', Arial, sans-serif" selected>Segoe UI</option>
-          <option value="'Roboto', sans-serif">Roboto</option>
-          <option value="'Poppins', sans-serif">Poppins</option>
-          <option value="Arial, sans-serif">Arial</option>
-          <option value="'Times New Roman', serif">Times New Roman</option>
-        </select>
-
-        <select id="textCaseSelector" class="control-select" onchange="changeTextCase(this.value)" title="Change Text Case">
-          <option value="normal" selected>Normal Case</option>
-          <option value="uppercase">ALL CAPITAL</option>
-          <option value="capitalize">Each Word Capital</option>
-        </select>
-
-        <button class="btn btn-success" onclick="downloadDirectPDF()">📥 PDF</button>
-        <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+      <!-- Row 2: Direct Share to Specified Number / Email -->
+      <div class="toolbar-row" style="background: #ffffff; padding: 6px 10px; border-radius: 4px; border: 1px solid #cbd5e1;">
+        <div class="btn-group" style="flex: 1;">
+          <span style="font-size: 11px; font-weight: bold; color: #475569;">Send Directly To:</span>
+          <input type="text" id="targetShareNumber" class="share-input" placeholder="WhatsApp No (e.g. 9876543210)">
+          <input type="email" id="targetShareEmail" class="share-input" placeholder="Email (optional)">
+        </div>
+        <div class="btn-group">
+          <!-- Web Share API (Direct file attach to WhatsApp/Gmail) -->
+          <button class="btn btn-share" onclick="shareDirectPdfFile()">📲 Share PDF File</button>
+          <button class="btn btn-whatsapp" onclick="shareWhatsApp()">📱 WhatsApp Text</button>
+          <button class="btn btn-email" onclick="shareEmail()">✉️ Email</button>
+        </div>
       </div>
     </div>
 
@@ -432,11 +456,11 @@
         </div>
         <div class="info-row">
           <label>Mobile No :</label>
-          <input type="text" id="partyMobile" placeholder="Contact Number">
+          <input type="text" id="partyMobile" placeholder="Contact Number" oninput="syncTargetShareFields()">
         </div>
         <div class="info-row">
           <label>Email ID :</label>
-          <input type="email" id="partyEmail" placeholder="client@domain.com">
+          <input type="email" id="partyEmail" placeholder="client@domain.com" oninput="syncTargetShareFields()">
         </div>
         <div class="info-row">
           <label id="lblPartyGst">GSTIN :</label>
@@ -648,6 +672,14 @@
       } else if (caseType === 'capitalize') {
         invoiceArea.classList.add('case-capitalize');
       }
+    }
+
+    /* ====== Sync Target Top Toolbar Fields ====== */
+    function syncTargetShareFields() {
+      const mobile = document.getElementById('partyMobile').value;
+      const email = document.getElementById('partyEmail').value;
+      if (mobile) document.getElementById('targetShareNumber').value = mobile;
+      if (email) document.getElementById('targetShareEmail').value = email;
     }
 
     /* ====== Sync Billed To & Second Address ====== */
@@ -999,6 +1031,45 @@
       html2pdf().set(opt).from(element).save();
     }
 
+    /* ====== Direct Native Web Share with PDF File Attachment ====== */
+    async function shareDirectPdfFile() {
+      const element = document.getElementById('invoiceArea');
+      const invoiceNo = document.getElementById('invoiceNumber').value || 'Document';
+      const docTitle = document.getElementById('docTitle').innerText;
+      const comp = document.getElementById('compName').value || 'Nextro Energy Enterprises';
+      const grandTotal = document.getElementById('grandTotal').innerText;
+
+      const opt = {
+        margin: [5, 5, 5, 5],
+        filename: `${invoiceNo}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      try {
+        // Generate PDF as Blob
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const pdfFile = new File([pdfBlob], `${invoiceNo}.pdf`, { type: 'application/pdf' });
+
+        // Check if device supports direct file sharing (Mobile browsers, Chrome, Safari)
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          await navigator.share({
+            title: `${docTitle} - ${invoiceNo}`,
+            text: `Greeting from ${comp}. Please find attached ${docTitle} (${invoiceNo}) for ₹${grandTotal}.`,
+            files: [pdfFile]
+          });
+        } else {
+          // Fallback: Download file automatically & Open WhatsApp
+          alert("Direct file attachment is not supported on this browser. The PDF is being downloaded. You can now send it to the opened WhatsApp chat.");
+          downloadDirectPDF();
+          shareWhatsApp();
+        }
+      } catch (err) {
+        console.error("Sharing error:", err);
+      }
+    }
+
     function updateQRCode() {
       const upi = document.getElementById('upiId').value.trim();
       const comp = document.getElementById('compName').value.trim() || 'Nextro Energy Enterprises';
@@ -1011,29 +1082,35 @@
     }
 
     function shareWhatsApp() {
-      let clientPhone = document.getElementById('partyMobile').value.replace(/\D/g, '');
-      let targetPhone = clientPhone ? `91${clientPhone}` : DEFAULT_WHATSAPP.replace(/\D/g, '');
+      const customPhone = document.getElementById('targetShareNumber').value.trim();
+      const partyMobile = document.getElementById('partyMobile').value.trim();
+      
+      let rawPhone = customPhone || partyMobile || DEFAULT_WHATSAPP;
+      let cleanPhone = rawPhone.replace(/\D/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
       
       const invoiceNo = document.getElementById('invoiceNumber').value;
       const grandTotal = document.getElementById('grandTotal').innerText;
       const comp = document.getElementById('compName').value || 'Nextro Energy Enterprises';
       
       const text = `*Greeting from ${comp}*%0A%0AYour *${document.getElementById('docTitle').innerText}* is ready:%0A📄 *Doc No:* ${invoiceNo}%0A💰 *Grand Total:* ${grandTotal}%0A📅 *Date:* ${document.getElementById('docDate').value}%0A%0AFor any queries, contact: ${DEFAULT_WHATSAPP}%0AThank you!`;
-      window.open(`https://wa.me/${targetPhone}?text=${text}`, '_blank');
+      window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
     }
 
     function shareEmail() {
-      const clientEmail = document.getElementById('partyEmail').value.trim();
+      const customEmail = document.getElementById('targetShareEmail').value.trim();
+      const partyEmail = document.getElementById('partyEmail').value.trim();
+      const targetEmail = customEmail || partyEmail || DEFAULT_EMAIL;
+
       const invoiceNo = document.getElementById('invoiceNumber').value;
       const docTitle = document.getElementById('docTitle').innerText;
       const comp = document.getElementById('compName').value || 'Nextro Energy Enterprises';
       const grandTotal = document.getElementById('grandTotal').innerText;
 
-      const toEmail = clientEmail || DEFAULT_EMAIL;
       const subject = encodeURIComponent(`${docTitle} - ${invoiceNo} from ${comp}`);
       const body = encodeURIComponent(`Dear ${document.getElementById('partyName').value || 'Customer'},\n\nPlease find the details for your ${docTitle} below:\n\nDocument No: ${invoiceNo}\nDate: ${document.getElementById('docDate').value}\nTotal Amount: ${grandTotal}\n\nFor any support, email us at ${DEFAULT_EMAIL} or call ${DEFAULT_WHATSAPP}.\n\nBest Regards,\n${comp}`);
 
-      window.location.href = `mailto:${toEmail}?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
     }
 
     function saveCurrentInvoice() {
@@ -1116,6 +1193,7 @@
         document.getElementById('secondName').value = clients[name].secondName || '';
         document.getElementById('secondGst').value = clients[name].secondGst || '';
         document.getElementById('secondAddress').value = clients[name].secondAddr || '';
+        syncTargetShareFields();
         autoDetectStateFromGST();
       }
     }
@@ -1172,6 +1250,8 @@
       document.getElementById('secondGst').value = inv.secondGst || '';
       document.getElementById('secondAddress').value = inv.secondAddress || '';
 
+      syncTargetShareFields();
+
       const tb = document.getElementById('billBody');
       tb.innerHTML = '';
       inv.items.forEach(i => addRow(i.desc, i.code || i.hsn, i.qty, i.unit, i.rate, i.gst));
@@ -1190,6 +1270,8 @@
         document.getElementById('secondName').value = '';
         document.getElementById('secondGst').value = '';
         document.getElementById('secondAddress').value = '';
+        document.getElementById('targetShareNumber').value = '';
+        document.getElementById('targetShareEmail').value = '';
         document.getElementById('sameAsBilling').checked = false;
         addRow();
         handleDocTypeChange();
